@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.codesync.version.controller.VersionControllerTest
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.394 s -- in com.codesync.version.controller.VersionControllerTest

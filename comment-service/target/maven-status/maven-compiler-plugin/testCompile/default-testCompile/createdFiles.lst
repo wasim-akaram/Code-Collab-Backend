@@ -1,5 +1,0 @@
-com\codesync\comment\exception\GlobalExceptionHandlerTest.class
-com\codesync\comment\service\CommentServiceImplTest.class
-com\codesync\comment\config\JwtFilterTest.class
-com\codesync\comment\CommentServiceApplicationTests.class
-com\codesync\comment\controller\CommentControllerTest.class

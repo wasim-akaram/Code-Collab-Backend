@@ -1,8 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-CodeSync Version Control Service,com.codesync.version.controller,VersionController,58,51,0,0,10,7,5,6,5,6
-CodeSync Version Control Service,com.codesync.version,VersionServiceApplication,5,3,0,0,2,1,1,1,1,1
-CodeSync Version Control Service,com.codesync.version.config,JwtFilter,10,35,4,4,1,11,3,3,0,2
-CodeSync Version Control Service,com.codesync.version.config,SecurityConfig,87,0,0,0,23,0,4,0,4,0
-CodeSync Version Control Service,com.codesync.version.service,VersionServiceImpl,8,438,1,7,2,103,1,24,0,21
-CodeSync Version Control Service,com.codesync.version.exception,GlobalExceptionHandler,0,69,0,0,0,13,0,3,0,3
-CodeSync Version Control Service,com.codesync.version.exception,ResourceNotFoundException,0,4,0,0,0,2,0,1,0,1

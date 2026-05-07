@@ -1,4 +1,0 @@
-com\codesync\gateway\config\JwtAuthenticationFilter.class
-com\codesync\gateway\ApiGatewayApplication.class
-com\codesync\gateway\config\RequestLoggingFilter.class
-com\codesync\gateway\config\RequestLoggingFilter$Config.class

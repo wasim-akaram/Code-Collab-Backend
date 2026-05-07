@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.codesync.execution.config.JwtFilterTest
--------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.098 s -- in com.codesync.execution.config.JwtFilterTest

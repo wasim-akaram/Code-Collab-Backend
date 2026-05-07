@@ -1,4 +1,0 @@
-com\codesync\project\controller\ProjectControllerTest.class
-com\codesync\project\util\JwtUtilTest.class
-com\codesync\project\config\JwtFilterTest.class
-com\codesync\project\service\ProjectServiceImplTest.class
