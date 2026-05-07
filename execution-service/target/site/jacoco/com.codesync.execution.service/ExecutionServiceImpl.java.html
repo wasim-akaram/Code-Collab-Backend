@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExecutionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Execution Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.execution.service</a> &gt; <span class="el_source">ExecutionServiceImpl.java</span></div><h1>ExecutionServiceImpl.java</h1><pre class="source lang-java linenums">package com.codesync.execution.service;
+
+import com.codesync.execution.dto.ExecutionJobDto;
+import com.codesync.execution.entity.ExecutionJob;
+import com.codesync.execution.exception.ResourceNotFoundException;
+import com.codesync.execution.repository.ExecutionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of ExecutionService.
+ * Uses the Piston API (https://emkc.org/api/v2/piston) to execute code in a sandbox.
+ */
+@Service
+<span class="fc" id="L26">@RequiredArgsConstructor</span>
+<span class="fc" id="L27">@Slf4j</span>
+public class ExecutionServiceImpl implements ExecutionService {
+
+    private final ExecutionRepository executionRepository;
+    private final org.springframework.web.client.RestTemplate restTemplate;
+
+    @Override
+    @Transactional
+    public ExecutionJobDto submitExecution(ExecutionJobDto dto, String userEmail) {
+<span class="fc" id="L36">        ExecutionJob job = ExecutionJob.builder()</span>
+<span class="fc" id="L37">                .jobId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L38">                .projectId(dto.getProjectId())</span>
+<span class="fc" id="L39">                .fileId(dto.getFileId())</span>
+<span class="fc" id="L40">                .userEmail(userEmail)</span>
+<span class="fc" id="L41">                .language(dto.getLanguage())</span>
+<span class="fc" id="L42">                .sourceCode(dto.getSourceCode())</span>
+<span class="fc" id="L43">                .stdin(dto.getStdin())</span>
+<span class="fc" id="L44">                .status(&quot;QUEUED&quot;)</span>
+<span class="fc" id="L45">                .build();</span>
+                
+<span class="fc" id="L47">        ExecutionJob saved = executionRepository.save(job);</span>
+        
+        // Trigger async execution
+<span class="fc" id="L50">        executeInSandbox(saved.getJobId());</span>
+        
+<span class="fc" id="L52">        return mapToDto(saved);</span>
+    }
+
+    @Override
+    public ExecutionJobDto getJobById(String jobId) {
+<span class="fc" id="L57">        return mapToDto(executionRepository.findByJobId(jobId)</span>
+<span class="fc" id="L58">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Job not found&quot;)));</span>
+    }
+
+    @Override
+    public List&lt;ExecutionJobDto&gt; getExecutionsByUser(String userEmail) {
+<span class="fc" id="L63">        return executionRepository.findByUserEmailOrderByCreatedAtDesc(userEmail).stream()</span>
+<span class="fc" id="L64">                .map(this::mapToDto)</span>
+<span class="fc" id="L65">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public List&lt;ExecutionJobDto&gt; getExecutionsByProject(Long projectId) {
+<span class="fc" id="L70">        return executionRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream()</span>
+<span class="fc" id="L71">                .map(this::mapToDto)</span>
+<span class="fc" id="L72">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    @Transactional
+    public void cancelExecution(String jobId, String userEmail) {
+<span class="fc" id="L78">        ExecutionJob job = executionRepository.findByJobId(jobId)</span>
+<span class="pc" id="L79">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Job not found&quot;));</span>
+                
+<span class="pc bpc" id="L81" title="3 of 4 branches missed.">        if (&quot;QUEUED&quot;.equals(job.getStatus()) || &quot;RUNNING&quot;.equals(job.getStatus())) {</span>
+<span class="fc" id="L82">            job.setStatus(&quot;CANCELLED&quot;);</span>
+<span class="fc" id="L83">            job.setCompletedAt(LocalDateTime.now());</span>
+<span class="fc" id="L84">            executionRepository.save(job);</span>
+        }
+<span class="fc" id="L86">    }</span>
+
+    @Override
+    public ExecutionJobDto getExecutionResult(String jobId) {
+<span class="fc" id="L90">        return getJobById(jobId);</span>
+    }
+
+    @Override
+    public List&lt;String&gt; getSupportedLanguages() {
+<span class="fc" id="L95">        return Arrays.asList(&quot;java&quot;, &quot;python&quot;, &quot;javascript&quot;, &quot;typescript&quot;, &quot;cpp&quot;, &quot;c&quot;, &quot;go&quot;, &quot;rust&quot;, &quot;ruby&quot;, &quot;php&quot;);</span>
+    }
+
+    @Override
+    public String getLanguageVersion(String language) {
+<span class="pc bpc" id="L100" title="8 of 10 branches missed.">        return switch (language.toLowerCase()) {</span>
+<span class="fc" id="L101">            case &quot;java&quot; -&gt; &quot;15.0.2&quot;;</span>
+<span class="fc" id="L102">            case &quot;python&quot; -&gt; &quot;3.10.0&quot;;</span>
+<span class="nc" id="L103">            case &quot;javascript&quot; -&gt; &quot;18.15.0&quot;;</span>
+<span class="nc" id="L104">            case &quot;typescript&quot; -&gt; &quot;5.0.3&quot;;</span>
+<span class="nc" id="L105">            case &quot;cpp&quot;, &quot;c&quot; -&gt; &quot;10.2.0&quot;;</span>
+<span class="nc" id="L106">            case &quot;go&quot; -&gt; &quot;1.16.2&quot;;</span>
+<span class="nc" id="L107">            case &quot;rust&quot; -&gt; &quot;1.68.2&quot;;</span>
+<span class="nc" id="L108">            case &quot;ruby&quot; -&gt; &quot;3.0.1&quot;;</span>
+<span class="nc" id="L109">            case &quot;php&quot; -&gt; &quot;8.2.3&quot;;</span>
+<span class="nc" id="L110">            default -&gt; &quot;Unknown&quot;;</span>
+        };
+    }
+
+    @Override
+    public Map&lt;String, Object&gt; getExecutionStats(Long projectId) {
+<span class="fc" id="L116">        long total = executionRepository.findByProjectIdOrderByCreatedAtDesc(projectId).size();</span>
+<span class="fc" id="L117">        return Map.of(</span>
+<span class="fc" id="L118">            &quot;totalExecutions&quot;, total,</span>
+            &quot;projectId&quot;, projectId
+        );
+    }
+
+    // ─── LOCAL SANDBOX EXECUTION ──────────────────────────────────────────
+
+    @Async
+    public CompletableFuture&lt;Void&gt; executeInSandbox(String jobId) {
+<span class="fc" id="L127">        ExecutionJob job = executionRepository.findByJobId(jobId).orElse(null);</span>
+<span class="pc bpc" id="L128" title="2 of 4 branches missed.">        if (job == null || &quot;CANCELLED&quot;.equals(job.getStatus())) return CompletableFuture.completedFuture(null);</span>
+        
+        try {
+<span class="fc" id="L131">            job.setStatus(&quot;RUNNING&quot;);</span>
+<span class="fc" id="L132">            executionRepository.save(job);</span>
+            
+<span class="fc" id="L134">            long startTime = System.currentTimeMillis();</span>
+            
+            // Create temp file for the source code
+<span class="fc" id="L137">            java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory(&quot;codesync-exec-&quot;);</span>
+<span class="fc" id="L138">            String fileName = getFileName(job.getLanguage());</span>
+<span class="fc" id="L139">            java.nio.file.Path sourceFile = tempDir.resolve(fileName);</span>
+<span class="fc" id="L140">            java.nio.file.Files.writeString(sourceFile, job.getSourceCode());</span>
+            
+            // Build the command based on language
+<span class="fc" id="L143">            ProcessBuilder pb = createProcessBuilder(job.getLanguage(), sourceFile, tempDir);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if (pb == null) {</span>
+<span class="nc" id="L145">                job.setStatus(&quot;FAILED&quot;);</span>
+<span class="nc" id="L146">                job.setStderr(&quot;Unsupported language: &quot; + job.getLanguage());</span>
+<span class="nc" id="L147">                job.setExitCode(-1);</span>
+<span class="nc" id="L148">                job.setCompletedAt(LocalDateTime.now());</span>
+<span class="nc" id="L149">                executionRepository.save(job);</span>
+<span class="nc" id="L150">                cleanup(tempDir);</span>
+<span class="nc" id="L151">                return CompletableFuture.completedFuture(null);</span>
+            }
+            
+<span class="fc" id="L154">            pb.redirectErrorStream(false);</span>
+<span class="fc" id="L155">            pb.directory(tempDir.toFile());</span>
+            
+<span class="fc" id="L157">            Process process = pb.start();</span>
+            
+            // Feed stdin if provided
+<span class="pc bpc" id="L160" title="2 of 4 branches missed.">            if (job.getStdin() != null &amp;&amp; !job.getStdin().isEmpty()) {</span>
+<span class="fc" id="L161">                try (var os = process.getOutputStream()) {</span>
+<span class="fc" id="L162">                    os.write(job.getStdin().getBytes());</span>
+<span class="fc" id="L163">                    os.flush();</span>
+                }
+            } else {
+<span class="nc" id="L166">                process.getOutputStream().close();</span>
+            }
+            
+            // Read stdout and stderr concurrently
+<span class="fc" id="L170">            String stdout = new String(process.getInputStream().readAllBytes());</span>
+<span class="fc" id="L171">            String stderr = new String(process.getErrorStream().readAllBytes());</span>
+            
+<span class="fc" id="L173">            boolean finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);</span>
+<span class="fc" id="L174">            long endTime = System.currentTimeMillis();</span>
+            
+            // Re-fetch in case of cancellation
+<span class="fc" id="L177">            job = executionRepository.findByJobId(jobId).orElse(null);</span>
+<span class="pc bpc" id="L178" title="2 of 4 branches missed.">            if (job == null || &quot;CANCELLED&quot;.equals(job.getStatus())) {</span>
+<span class="nc" id="L179">                process.destroyForcibly();</span>
+<span class="nc" id="L180">                cleanup(tempDir);</span>
+<span class="nc" id="L181">                return CompletableFuture.completedFuture(null);</span>
+            }
+            
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">            if (!finished) {</span>
+<span class="nc" id="L185">                process.destroyForcibly();</span>
+<span class="nc" id="L186">                job.setStatus(&quot;FAILED&quot;);</span>
+<span class="nc" id="L187">                job.setStdout(stdout);</span>
+<span class="nc" id="L188">                job.setStderr(&quot;Execution timed out (30s limit)&quot;);</span>
+<span class="nc" id="L189">                job.setExitCode(-1);</span>
+            } else {
+<span class="fc" id="L191">                job.setStatus(&quot;COMPLETED&quot;);</span>
+<span class="fc" id="L192">                job.setStdout(stdout);</span>
+<span class="fc" id="L193">                job.setStderr(stderr);</span>
+<span class="fc" id="L194">                job.setExitCode(process.exitValue());</span>
+            }
+            
+<span class="fc" id="L197">            job.setExecutionTimeMs(endTime - startTime);</span>
+<span class="fc" id="L198">            job.setMemoryUsedKb(0L);</span>
+<span class="fc" id="L199">            job.setCompletedAt(LocalDateTime.now());</span>
+<span class="fc" id="L200">            executionRepository.save(job);</span>
+            
+<span class="fc" id="L202">            cleanup(tempDir);</span>
+            
+<span class="nc" id="L204">        } catch (Exception e) {</span>
+<span class="nc" id="L205">            log.error(&quot;Execution failed for job {}: {}&quot;, jobId, e.getMessage());</span>
+<span class="nc" id="L206">            job = executionRepository.findByJobId(jobId).orElse(null);</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">            if (job != null &amp;&amp; !&quot;CANCELLED&quot;.equals(job.getStatus())) {</span>
+<span class="nc" id="L208">                job.setStatus(&quot;FAILED&quot;);</span>
+<span class="nc" id="L209">                job.setStderr(&quot;Execution error: &quot; + e.getMessage());</span>
+<span class="nc" id="L210">                job.setExitCode(-1);</span>
+<span class="nc" id="L211">                job.setCompletedAt(LocalDateTime.now());</span>
+<span class="nc" id="L212">                executionRepository.save(job);</span>
+            }
+<span class="fc" id="L214">        }</span>
+<span class="fc" id="L215">        return CompletableFuture.completedFuture(null);</span>
+    }
+
+    private ProcessBuilder createProcessBuilder(String language, java.nio.file.Path sourceFile, java.nio.file.Path tempDir) {
+<span class="fc" id="L219">        String os = System.getProperty(&quot;os.name&quot;).toLowerCase();</span>
+<span class="fc" id="L220">        boolean isWindows = os.contains(&quot;win&quot;);</span>
+        
+<span class="pc bpc" id="L222" title="7 of 8 branches missed.">        return switch (language.toLowerCase()) {</span>
+<span class="nc" id="L223">            case &quot;python&quot; -&gt; new ProcessBuilder(&quot;python&quot;, sourceFile.toString());</span>
+<span class="nc" id="L224">            case &quot;javascript&quot; -&gt; new ProcessBuilder(&quot;node&quot;, sourceFile.toString());</span>
+            case &quot;java&quot; -&gt; {
+                // Compile then run
+<span class="fc" id="L227">                String className = &quot;Main&quot;;</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">                yield new ProcessBuilder(isWindows ? &quot;cmd&quot; : &quot;sh&quot;,</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">                        isWindows ? &quot;/c&quot; : &quot;-c&quot;,</span>
+<span class="fc" id="L230">                        &quot;javac &quot; + sourceFile.getFileName() + &quot; &amp;&amp; java -cp . &quot; + className);</span>
+            }
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            case &quot;typescript&quot; -&gt; new ProcessBuilder(isWindows ? &quot;cmd&quot; : &quot;sh&quot;,</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                    isWindows ? &quot;/c&quot; : &quot;-c&quot;,</span>
+<span class="nc" id="L234">                    &quot;npx -y ts-node &quot; + sourceFile.toString());</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            case &quot;cpp&quot; -&gt; new ProcessBuilder(isWindows ? &quot;cmd&quot; : &quot;sh&quot;,</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">                    isWindows ? &quot;/c&quot; : &quot;-c&quot;,</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                    &quot;g++ -o program &quot; + sourceFile.getFileName() + &quot; &amp;&amp; &quot; + (isWindows ? &quot;program.exe&quot; : &quot;./program&quot;));</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">            case &quot;c&quot; -&gt; new ProcessBuilder(isWindows ? &quot;cmd&quot; : &quot;sh&quot;,</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    isWindows ? &quot;/c&quot; : &quot;-c&quot;,</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">                    &quot;gcc -o program &quot; + sourceFile.getFileName() + &quot; &amp;&amp; &quot; + (isWindows ? &quot;program.exe&quot; : &quot;./program&quot;));</span>
+<span class="nc" id="L241">            case &quot;go&quot; -&gt; new ProcessBuilder(&quot;go&quot;, &quot;run&quot;, sourceFile.toString());</span>
+<span class="nc" id="L242">            default -&gt; null;</span>
+        };
+    }
+
+    private String getFileName(String language) {
+<span class="pc bpc" id="L247" title="10 of 11 branches missed.">        return switch (language.toLowerCase()) {</span>
+<span class="nc" id="L248">            case &quot;python&quot; -&gt; &quot;main.py&quot;;</span>
+<span class="nc" id="L249">            case &quot;javascript&quot; -&gt; &quot;main.js&quot;;</span>
+<span class="nc" id="L250">            case &quot;typescript&quot; -&gt; &quot;main.ts&quot;;</span>
+<span class="fc" id="L251">            case &quot;java&quot; -&gt; &quot;Main.java&quot;;</span>
+<span class="nc" id="L252">            case &quot;cpp&quot; -&gt; &quot;main.cpp&quot;;</span>
+<span class="nc" id="L253">            case &quot;c&quot; -&gt; &quot;main.c&quot;;</span>
+<span class="nc" id="L254">            case &quot;go&quot; -&gt; &quot;main.go&quot;;</span>
+<span class="nc" id="L255">            case &quot;rust&quot; -&gt; &quot;main.rs&quot;;</span>
+<span class="nc" id="L256">            case &quot;ruby&quot; -&gt; &quot;main.rb&quot;;</span>
+<span class="nc" id="L257">            case &quot;php&quot; -&gt; &quot;main.php&quot;;</span>
+<span class="nc" id="L258">            default -&gt; &quot;main.txt&quot;;</span>
+        };
+    }
+
+    private void cleanup(java.nio.file.Path tempDir) {
+        try {
+<span class="fc" id="L264">            java.nio.file.Files.walk(tempDir)</span>
+<span class="fc" id="L265">                .sorted(java.util.Comparator.reverseOrder())</span>
+<span class="fc" id="L266">                .forEach(p -&gt; {</span>
+<span class="pc" id="L267">                    try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {}</span>
+<span class="fc" id="L268">                });</span>
+<span class="pc" id="L269">        } catch (Exception ignored) {}</span>
+<span class="fc" id="L270">    }</span>
+    
+    private ExecutionJobDto mapToDto(ExecutionJob job) {
+<span class="fc" id="L273">        return ExecutionJobDto.builder()</span>
+<span class="fc" id="L274">                .jobId(job.getJobId())</span>
+<span class="fc" id="L275">                .projectId(job.getProjectId())</span>
+<span class="fc" id="L276">                .fileId(job.getFileId())</span>
+<span class="fc" id="L277">                .userEmail(job.getUserEmail())</span>
+<span class="fc" id="L278">                .language(job.getLanguage())</span>
+<span class="fc" id="L279">                .sourceCode(job.getSourceCode())</span>
+<span class="fc" id="L280">                .stdin(job.getStdin())</span>
+<span class="fc" id="L281">                .status(job.getStatus())</span>
+<span class="fc" id="L282">                .stdout(job.getStdout())</span>
+<span class="fc" id="L283">                .stderr(job.getStderr())</span>
+<span class="fc" id="L284">                .exitCode(job.getExitCode())</span>
+<span class="fc" id="L285">                .executionTimeMs(job.getExecutionTimeMs())</span>
+<span class="fc" id="L286">                .memoryUsedKb(job.getMemoryUsedKb())</span>
+<span class="fc" id="L287">                .createdAt(job.getCreatedAt())</span>
+<span class="fc" id="L288">                .completedAt(job.getCompletedAt())</span>
+<span class="fc" id="L289">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

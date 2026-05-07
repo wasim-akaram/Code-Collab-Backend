@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExecutionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Execution Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.execution.controller</a> &gt; <span class="el_source">ExecutionController.java</span></div><h1>ExecutionController.java</h1><pre class="source lang-java linenums">package com.codesync.execution.controller;
+
+import com.codesync.execution.dto.ExecutionJobDto;
+import com.codesync.execution.service.ExecutionService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * REST controller for Code Execution operations.
+ * X-User header contains the user's email (set by the API Gateway).
+ */
+@RestController
+@RequestMapping(&quot;/executions&quot;)
+<span class="fc" id="L20">@RequiredArgsConstructor</span>
+public class ExecutionController {
+
+    private final ExecutionService executionService;
+
+    /** Submit a new code execution job. */
+    @PostMapping
+    public ResponseEntity&lt;ExecutionJobDto&gt; submitExecution(@Valid @RequestBody ExecutionJobDto jobDto,
+                                                           @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L29">        return new ResponseEntity&lt;&gt;(executionService.submitExecution(jobDto, userEmail), HttpStatus.CREATED);</span>
+    }
+
+    /** Get job by its UUID. */
+    @GetMapping(&quot;/{jobId}&quot;)
+    public ResponseEntity&lt;ExecutionJobDto&gt; getJobById(@PathVariable String jobId) {
+<span class="fc" id="L35">        return ResponseEntity.ok(executionService.getJobById(jobId));</span>
+    }
+
+    /** Get all executions by the current user. */
+    @GetMapping(&quot;/user&quot;)
+    public ResponseEntity&lt;List&lt;ExecutionJobDto&gt;&gt; getExecutionsByUser(@RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L41">        return ResponseEntity.ok(executionService.getExecutionsByUser(userEmail));</span>
+    }
+
+    /** Get all executions for a specific project. */
+    @GetMapping(&quot;/project/{projectId}&quot;)
+    public ResponseEntity&lt;List&lt;ExecutionJobDto&gt;&gt; getExecutionsByProject(@PathVariable Long projectId) {
+<span class="fc" id="L47">        return ResponseEntity.ok(executionService.getExecutionsByProject(projectId));</span>
+    }
+
+    /** Cancel an ongoing execution. */
+    @PostMapping(&quot;/{jobId}/cancel&quot;)
+    public ResponseEntity&lt;Void&gt; cancelExecution(@PathVariable String jobId,
+                                                @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L54">        executionService.cancelExecution(jobId, userEmail);</span>
+<span class="fc" id="L55">        return ResponseEntity.ok().build();</span>
+    }
+
+    /** Get execution result (poll this until status is COMPLETED/FAILED). */
+    @GetMapping(&quot;/{jobId}/result&quot;)
+    public ResponseEntity&lt;ExecutionJobDto&gt; getExecutionResult(@PathVariable String jobId) {
+<span class="fc" id="L61">        return ResponseEntity.ok(executionService.getExecutionResult(jobId));</span>
+    }
+
+    /** Get supported programming languages. */
+    @GetMapping(&quot;/languages&quot;)
+    public ResponseEntity&lt;List&lt;String&gt;&gt; getSupportedLanguages() {
+<span class="fc" id="L67">        return ResponseEntity.ok(executionService.getSupportedLanguages());</span>
+    }
+
+    /** Get version of a supported language runtime. */
+    @GetMapping(&quot;/languages/{language}/version&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; getLanguageVersion(@PathVariable String language) {
+<span class="fc" id="L73">        return ResponseEntity.ok(Map.of(&quot;language&quot;, language, &quot;version&quot;, executionService.getLanguageVersion(language)));</span>
+    }
+
+    /** Get execution statistics for a project. */
+    @GetMapping(&quot;/stats/project/{projectId}&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; getExecutionStats(@PathVariable Long projectId) {
+<span class="fc" id="L79">        return ResponseEntity.ok(executionService.getExecutionStats(projectId));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

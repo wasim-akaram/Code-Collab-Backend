@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Version Control Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.version.controller</a> &gt; <span class="el_source">VersionController.java</span></div><h1>VersionController.java</h1><pre class="source lang-java linenums">package com.codesync.version.controller;
+
+import com.codesync.version.dto.SnapshotDto;
+import com.codesync.version.service.VersionService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * REST controller for snapshot and versioning operations.
+ * All endpoints sit behind the API Gateway which injects the authenticated
+ * user's email via the {@code X-User} header.
+ *
+ * Endpoints (all prefixed with /versions):
+ *   POST   /snapshots                            – create snapshot
+ *   GET    /snapshots/{id}                       – get by ID
+ *   GET    /files/{fileId}/history?branch=main   – file history on a branch
+ *   GET    /files/{fileId}/snapshots             – file history ALL branches
+ *   GET    /files/{fileId}/latest?branch=main    – latest snapshot for file
+ *   GET    /diff?oldId=X&amp;newId=Y                 – unified diff
+ *   POST   /snapshots/{id}/tag                   – tag a snapshot
+ *   POST   /snapshots/{id}/restore               – non-destructive restore
+ *   GET    /projects/{projectId}/snapshots       – all project snapshots
+ *   GET    /projects/{projectId}/branches        – list branch names
+ *   POST   /branches                             – create a new branch
+ */
+@RestController
+@RequestMapping(&quot;/versions&quot;)
+@RequiredArgsConstructor
+public class VersionController {
+
+    private final VersionService versionService;
+
+    // ─── Snapshot CRUD ────────────────────────────────────────────────────────
+
+    /** Create a new snapshot (commit). */
+    @PostMapping(&quot;/snapshots&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; createSnapshot(
+            @Valid @RequestBody SnapshotDto snapshotDto,
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L46">        return new ResponseEntity&lt;&gt;(versionService.createSnapshot(snapshotDto, userEmail), HttpStatus.CREATED);</span>
+    }
+
+    /** Get a snapshot by ID. */
+    @GetMapping(&quot;/snapshots/{id}&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; getSnapshot(@PathVariable Long id) {
+<span class="fc" id="L52">        return ResponseEntity.ok(versionService.getSnapshotById(id));</span>
+    }
+
+    /** Tag a snapshot (e.g. &quot;v1.0.0&quot;). */
+    @PostMapping(&quot;/snapshots/{id}/tag&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; tagSnapshot(
+            @PathVariable Long id,
+            @RequestBody Map&lt;String, String&gt; body) {
+<span class="fc" id="L60">        return ResponseEntity.ok(versionService.tagSnapshot(id, body.get(&quot;tag&quot;)));</span>
+    }
+
+    /**
+     * Non-destructive restore: creates a NEW snapshot with the content from
+     * the specified snapshot (per Section 2.7 of the spec).
+     */
+    @PostMapping(&quot;/snapshots/{id}/restore&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; restoreSnapshot(
+            @PathVariable Long id,
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="nc" id="L71">        return new ResponseEntity&lt;&gt;(versionService.restoreSnapshot(id, userEmail), HttpStatus.CREATED);</span>
+    }
+
+    // ─── File-scoped History ──────────────────────────────────────────────────
+
+    /** Get snapshot history for a file on a specific branch (default: main). */
+    @GetMapping(&quot;/files/{fileId}/history&quot;)
+    public ResponseEntity&lt;List&lt;SnapshotDto&gt;&gt; getFileHistory(
+            @PathVariable Long fileId,
+            @RequestParam(defaultValue = &quot;main&quot;) String branch) {
+<span class="fc" id="L81">        return ResponseEntity.ok(versionService.getFileHistory(fileId, branch));</span>
+    }
+
+    /** Get all snapshots for a file across ALL branches. */
+    @GetMapping(&quot;/files/{fileId}/snapshots&quot;)
+    public ResponseEntity&lt;List&lt;SnapshotDto&gt;&gt; getSnapshotsByFile(@PathVariable Long fileId) {
+<span class="nc" id="L87">        return ResponseEntity.ok(versionService.getSnapshotsByFile(fileId));</span>
+    }
+
+    /** Get the latest snapshot for a file on a branch. */
+    @GetMapping(&quot;/files/{fileId}/latest&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; getLatestSnapshot(
+            @PathVariable Long fileId,
+            @RequestParam(defaultValue = &quot;main&quot;) String branch) {
+<span class="fc" id="L95">        return ResponseEntity.ok(versionService.getLatestSnapshot(fileId, branch));</span>
+    }
+
+    // ─── Project-scoped Queries ───────────────────────────────────────────────
+
+    /** Get all snapshots for a project across ALL branches, newest first. */
+    @GetMapping(&quot;/projects/{projectId}/snapshots&quot;)
+    public ResponseEntity&lt;List&lt;SnapshotDto&gt;&gt; getProjectSnapshots(@PathVariable Long projectId) {
+<span class="nc" id="L103">        return ResponseEntity.ok(versionService.getSnapshotsByProject(projectId));</span>
+    }
+
+    /** List all distinct branch names that exist for a project. */
+    @GetMapping(&quot;/projects/{projectId}/branches&quot;)
+    public ResponseEntity&lt;List&lt;String&gt;&gt; getBranches(@PathVariable Long projectId) {
+<span class="nc" id="L109">        return ResponseEntity.ok(versionService.getBranches(projectId));</span>
+    }
+
+    // ─── Diff ─────────────────────────────────────────────────────────────────
+
+    /** Compute the unified diff between two snapshots. */
+    @GetMapping(&quot;/diff&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; getDiff(
+            @RequestParam Long oldId,
+            @RequestParam Long newId) {
+<span class="fc" id="L119">        String diff = versionService.getDiff(oldId, newId);</span>
+<span class="fc" id="L120">        return ResponseEntity.ok(Map.of(&quot;diff&quot;, diff));</span>
+    }
+
+    // ─── Branch Management ────────────────────────────────────────────────────
+
+    /**
+     * Create a new branch for a file by copying the latest snapshot from
+     * the source branch.  Request body:
+     * { &quot;fileId&quot;: 1, &quot;sourceBranch&quot;: &quot;main&quot;, &quot;newBranch&quot;: &quot;feature/x&quot; }
+     */
+    @PostMapping(&quot;/branches&quot;)
+    public ResponseEntity&lt;SnapshotDto&gt; createBranch(
+            @RequestBody Map&lt;String, String&gt; body,
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="nc" id="L134">        Long fileId      = Long.parseLong(body.get(&quot;fileId&quot;));</span>
+<span class="nc" id="L135">        String srcBranch = body.getOrDefault(&quot;sourceBranch&quot;, &quot;main&quot;);</span>
+<span class="nc" id="L136">        String newBranch = body.get(&quot;newBranch&quot;);</span>
+<span class="nc" id="L137">        return new ResponseEntity&lt;&gt;(</span>
+<span class="nc" id="L138">                versionService.createBranch(fileId, srcBranch, newBranch, userEmail),</span>
+<span class="nc" id="L139">                HttpStatus.CREATED);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

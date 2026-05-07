@@ -1,0 +1,12 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+CodeSync Execution Service,com.codesync.execution.entity,ExecutionJob.ExecutionJobBuilder,36,127,1,1,0,1,2,18,1,18
+CodeSync Execution Service,com.codesync.execution.entity,ExecutionJob,47,128,0,0,2,18,12,24,12,24
+CodeSync Execution Service,com.codesync.execution.controller,ExecutionController,0,69,0,0,0,11,0,10,0,10
+CodeSync Execution Service,com.codesync.execution.service,ExecutionServiceImpl,292,477,58,15,56,107,48,19,1,18
+CodeSync Execution Service,com.codesync.execution.config,SecurityConfig,104,0,0,0,11,0,5,0,5,0
+CodeSync Execution Service,com.codesync.execution.config,JwtFilter,0,24,0,2,0,8,0,3,0,2
+CodeSync Execution Service,com.codesync.execution.exception,GlobalExceptionHandler,0,69,0,0,0,13,0,3,0,3
+CodeSync Execution Service,com.codesync.execution.exception,ResourceNotFoundException,0,4,0,0,0,2,0,1,0,1
+CodeSync Execution Service,com.codesync.execution.dto,ExecutionJobDto,527,160,126,0,0,19,67,33,4,33
+CodeSync Execution Service,com.codesync.execution.dto,ExecutionJobDto.ExecutionJobDtoBuilder,32,112,0,0,0,1,1,17,1,17
+CodeSync Execution Service,com.codesync.execution,ExecutionServiceApplication,5,7,0,0,2,2,1,2,1,2

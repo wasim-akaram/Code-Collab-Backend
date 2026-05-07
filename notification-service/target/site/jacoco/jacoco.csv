@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+CodeSync Notification Service,com.codesync.notification.exception,GlobalExceptionHandler,0,102,0,0,0,19,0,4,0,4
+CodeSync Notification Service,com.codesync.notification.exception,ResourceNotFoundException,0,4,0,0,0,2,0,1,0,1
+CodeSync Notification Service,com.codesync.notification.controller,NotificationController,29,62,0,0,10,12,3,7,3,7
+CodeSync Notification Service,com.codesync.notification.service,NotificationServiceImpl,20,267,0,10,7,66,1,19,1,14
+CodeSync Notification Service,com.codesync.notification.config,SecurityConfig,120,0,0,0,31,0,4,0,4,0
+CodeSync Notification Service,com.codesync.notification.config,JwtFilter,10,35,4,4,1,11,3,3,0,2
+CodeSync Notification Service,com.codesync.notification,NotificationServiceApplication,5,3,0,0,2,1,1,1,1,1

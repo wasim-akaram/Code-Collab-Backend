@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.codesync.notification.controller.NotificationControllerTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.489 s -- in com.codesync.notification.controller.NotificationControllerTest

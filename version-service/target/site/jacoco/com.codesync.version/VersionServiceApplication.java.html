@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionServiceApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Version Control Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.version</a> &gt; <span class="el_source">VersionServiceApplication.java</span></div><h1>VersionServiceApplication.java</h1><pre class="source lang-java linenums">package com.codesync.version;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+/**
+ * Main entry point for the CodeSync Version Service.
+ * This service manages snapshots (commits), file histories, diffing, and branching.
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+<span class="fc" id="L13">public class VersionServiceApplication {</span>
+
+    public static void main(String[] args) {
+        // Starts the application and registers with Eureka
+<span class="nc" id="L17">        SpringApplication.run(VersionServiceApplication.class, args);</span>
+<span class="nc" id="L18">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

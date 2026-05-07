@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Notification Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.notification.service</a> &gt; <span class="el_source">NotificationServiceImpl.java</span></div><h1>NotificationServiceImpl.java</h1><pre class="source lang-java linenums">package com.codesync.notification.service;
+
+import com.codesync.notification.dto.NotificationDto;
+import com.codesync.notification.entity.Notification;
+import com.codesync.notification.exception.ResourceNotFoundException;
+import com.codesync.notification.repository.NotificationRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of NotificationService.
+ * Uses email-based identity (userEmail) — consistent with all other services.
+ */
+<span class="fc" id="L20">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class NotificationServiceImpl implements NotificationService {
+
+    private final NotificationRepository notificationRepository;
+
+    @Override
+    @Transactional
+    public NotificationDto sendNotification(NotificationDto dto) {
+<span class="fc" id="L30">        Notification notification = Notification.builder()</span>
+<span class="fc" id="L31">                .userEmail(dto.getUserEmail())</span>
+<span class="fc" id="L32">                .actorEmail(dto.getActorEmail())</span>
+<span class="fc" id="L33">                .title(dto.getTitle())</span>
+<span class="fc" id="L34">                .type(dto.getType())</span>
+<span class="fc" id="L35">                .message(dto.getMessage())</span>
+<span class="fc" id="L36">                .referenceId(dto.getReferenceId())</span>
+<span class="fc" id="L37">                .referenceType(dto.getReferenceType())</span>
+<span class="fc" id="L38">                .build();</span>
+
+<span class="fc" id="L40">        NotificationDto saved = mapToDto(notificationRepository.save(notification));</span>
+<span class="fc" id="L41">        log.info(&quot;Notification sent to {}: [{}] {}&quot;, dto.getUserEmail(), dto.getType(), dto.getMessage());</span>
+<span class="fc" id="L42">        return saved;</span>
+    }
+
+    /**
+     * Admin broadcast — creates one notification row per recipient.
+     * Runs in a transaction so all-or-nothing persists.
+     */
+    @Override
+    @Transactional
+    public void sendBulk(List&lt;String&gt; recipientEmails, String title, String message, String type) {
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (recipientEmails == null || recipientEmails.isEmpty()) return;</span>
+
+<span class="fc" id="L54">        List&lt;Notification&gt; batch = recipientEmails.stream()</span>
+<span class="fc" id="L55">                .distinct()</span>
+<span class="fc" id="L56">                .map(email -&gt; Notification.builder()</span>
+<span class="fc" id="L57">                        .userEmail(email)</span>
+<span class="fc" id="L58">                        .title(title)</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                        .type(type != null ? type : &quot;BROADCAST&quot;)</span>
+<span class="fc" id="L60">                        .message(message)</span>
+<span class="fc" id="L61">                        .referenceType(&quot;BROADCAST&quot;)</span>
+<span class="fc" id="L62">                        .build())</span>
+<span class="fc" id="L63">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L65">        notificationRepository.saveAll(batch);</span>
+<span class="fc" id="L66">        log.info(&quot;Bulk notification sent to {} recipients: [{}] {}&quot;, batch.size(), type, title);</span>
+<span class="fc" id="L67">    }</span>
+
+    @Override
+    public List&lt;NotificationDto&gt; getUserNotifications(String userEmail) {
+<span class="fc" id="L71">        return notificationRepository.findByUserEmailOrderByCreatedAtDesc(userEmail)</span>
+<span class="fc" id="L72">                .stream()</span>
+<span class="fc" id="L73">                .map(this::mapToDto)</span>
+<span class="fc" id="L74">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public List&lt;NotificationDto&gt; getUnreadNotifications(String userEmail) {
+<span class="fc" id="L79">        return notificationRepository.findByUserEmailAndIsReadFalseOrderByCreatedAtDesc(userEmail)</span>
+<span class="fc" id="L80">                .stream()</span>
+<span class="fc" id="L81">                .map(this::mapToDto)</span>
+<span class="fc" id="L82">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public long getUnreadCount(String userEmail) {
+<span class="fc" id="L87">        return notificationRepository.countByUserEmailAndIsReadFalse(userEmail);</span>
+    }
+
+    @Override
+    @Transactional
+    public NotificationDto markAsRead(Long notificationId, String userEmail) {
+<span class="fc" id="L93">        Notification notification = notificationRepository.findById(notificationId)</span>
+<span class="fc" id="L94">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Notification not found: &quot; + notificationId));</span>
+
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (!notification.getUserEmail().equals(userEmail)) {</span>
+<span class="fc" id="L97">            throw new SecurityException(&quot;Cannot modify notifications belonging to another user&quot;);</span>
+        }
+
+<span class="fc" id="L100">        notification.setIsRead(true);</span>
+<span class="fc" id="L101">        return mapToDto(notificationRepository.save(notification));</span>
+    }
+
+    @Override
+    @Transactional
+    public void markAllAsRead(String userEmail) {
+<span class="fc" id="L107">        notificationRepository.markAllAsReadForUser(userEmail);</span>
+<span class="fc" id="L108">        log.info(&quot;Marked all notifications as read for {}&quot;, userEmail);</span>
+<span class="fc" id="L109">    }</span>
+
+    @Override
+    @Transactional
+    public void deleteNotification(Long notificationId, String userEmail) {
+<span class="fc" id="L114">        Notification notification = notificationRepository.findById(notificationId)</span>
+<span class="fc" id="L115">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Notification not found: &quot; + notificationId));</span>
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (!notification.getUserEmail().equals(userEmail)) {</span>
+<span class="fc" id="L118">            throw new SecurityException(&quot;Cannot delete notifications belonging to another user&quot;);</span>
+        }
+
+<span class="fc" id="L121">        notificationRepository.delete(notification);</span>
+<span class="fc" id="L122">    }</span>
+
+    @Override
+    @Transactional
+    public void deleteAllNotifications(String userEmail) {
+<span class="fc" id="L127">        notificationRepository.deleteByUserEmail(userEmail);</span>
+<span class="fc" id="L128">        log.info(&quot;Deleted all notifications for {}&quot;, userEmail);</span>
+<span class="fc" id="L129">    }</span>
+
+    @Override
+    @Async
+    public void sendEmailAlert(String toEmail, String subject, String body) {
+<span class="nc" id="L134">        log.info(&quot;[EMAIL] To: {} | Subject: {}&quot;, toEmail, subject);</span>
+<span class="nc" id="L135">        log.info(&quot;[EMAIL] Body: {}&quot;, body);</span>
+        try {
+<span class="nc" id="L137">            Thread.sleep(200);</span>
+<span class="nc" id="L138">            log.info(&quot;[EMAIL] Dispatched successfully to {}&quot;, toEmail);</span>
+<span class="nc" id="L139">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L140">            Thread.currentThread().interrupt();</span>
+        }
+<span class="nc" id="L142">    }</span>
+
+    // ─── Mapping ─────────────────────────────────────────────────────────────────
+
+    private NotificationDto mapToDto(Notification notification) {
+<span class="fc" id="L147">        return NotificationDto.builder()</span>
+<span class="fc" id="L148">                .notificationId(notification.getNotificationId())</span>
+<span class="fc" id="L149">                .userEmail(notification.getUserEmail())</span>
+<span class="fc" id="L150">                .actorEmail(notification.getActorEmail())</span>
+<span class="fc" id="L151">                .title(notification.getTitle())</span>
+<span class="fc" id="L152">                .type(notification.getType())</span>
+<span class="fc" id="L153">                .message(notification.getMessage())</span>
+<span class="fc" id="L154">                .referenceId(notification.getReferenceId())</span>
+<span class="fc" id="L155">                .referenceType(notification.getReferenceType())</span>
+<span class="fc" id="L156">                .isRead(notification.getIsRead())</span>
+<span class="fc" id="L157">                .createdAt(notification.getCreatedAt())</span>
+<span class="fc" id="L158">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

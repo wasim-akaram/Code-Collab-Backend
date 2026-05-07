@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeSync Notification Service</a> &gt; <a href="index.source.html" class="el_package">com.codesync.notification.controller</a> &gt; <span class="el_source">NotificationController.java</span></div><h1>NotificationController.java</h1><pre class="source lang-java linenums">package com.codesync.notification.controller;
+
+import com.codesync.notification.dto.NotificationDto;
+import com.codesync.notification.service.NotificationService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * REST controller for notification operations.
+ *
+ * X-User header (set by API Gateway from JWT sub) contains the user's email.
+ *
+ * Internal services (comment-service, collab-service, execution-service) call
+ * POST /notifications/send without requiring X-User — recipient email is in the DTO body.
+ */
+@RestController
+@RequestMapping(&quot;/notifications&quot;)
+@RequiredArgsConstructor
+public class NotificationController {
+
+    private final NotificationService notificationService;
+
+    /**
+     * Internal endpoint — used by other microservices to push a notification.
+     * No X-User required; recipient email is embedded in the DTO.
+     */
+    @PostMapping(&quot;/send&quot;)
+    public ResponseEntity&lt;NotificationDto&gt; sendNotification(@Valid @RequestBody NotificationDto dto) {
+<span class="fc" id="L35">        return new ResponseEntity&lt;&gt;(notificationService.sendNotification(dto), HttpStatus.CREATED);</span>
+    }
+
+    /**
+     * Admin broadcast — sends the same notification to a list of recipients.
+     * Body: { &quot;recipientEmails&quot;: [...], &quot;title&quot;: &quot;...&quot;, &quot;message&quot;: &quot;...&quot;, &quot;type&quot;: &quot;BROADCAST&quot; }
+     */
+    @PostMapping(&quot;/bulk&quot;)
+    public ResponseEntity&lt;Void&gt; sendBulk(@RequestBody NotificationDto dto) {
+<span class="nc" id="L44">        notificationService.sendBulk(</span>
+<span class="nc" id="L45">                dto.getRecipientEmails(),</span>
+<span class="nc" id="L46">                dto.getTitle(),</span>
+<span class="nc" id="L47">                dto.getMessage(),</span>
+<span class="nc" id="L48">                dto.getType()</span>
+        );
+<span class="nc" id="L50">        return ResponseEntity.accepted().build();</span>
+    }
+
+    /** Get all notifications for the authenticated user. */
+    @GetMapping
+    public ResponseEntity&lt;List&lt;NotificationDto&gt;&gt; getUserNotifications(
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L57">        return ResponseEntity.ok(notificationService.getUserNotifications(userEmail));</span>
+    }
+
+    /** Get only unread notifications for the authenticated user. */
+    @GetMapping(&quot;/unread&quot;)
+    public ResponseEntity&lt;List&lt;NotificationDto&gt;&gt; getUnreadNotifications(
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L64">        return ResponseEntity.ok(notificationService.getUnreadNotifications(userEmail));</span>
+    }
+
+    /** Get the count of unread notifications. */
+    @GetMapping(&quot;/unread/count&quot;)
+    public ResponseEntity&lt;Map&lt;String, Long&gt;&gt; getUnreadCount(
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L71">        return ResponseEntity.ok(Map.of(&quot;count&quot;, notificationService.getUnreadCount(userEmail)));</span>
+    }
+
+    /** Mark a specific notification as read. */
+    @PutMapping(&quot;/{notificationId}/read&quot;)
+    public ResponseEntity&lt;NotificationDto&gt; markAsRead(
+            @PathVariable Long notificationId,
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L79">        return ResponseEntity.ok(notificationService.markAsRead(notificationId, userEmail));</span>
+    }
+
+    /** Mark all notifications as read for the authenticated user. */
+    @PutMapping(&quot;/read/all&quot;)
+    public ResponseEntity&lt;Void&gt; markAllAsRead(@RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="fc" id="L85">        notificationService.markAllAsRead(userEmail);</span>
+<span class="fc" id="L86">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /** Delete a specific notification. */
+    @DeleteMapping(&quot;/{notificationId}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteNotification(
+            @PathVariable Long notificationId,
+            @RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="nc" id="L94">        notificationService.deleteNotification(notificationId, userEmail);</span>
+<span class="nc" id="L95">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /** Delete all notifications for the authenticated user. */
+    @DeleteMapping
+    public ResponseEntity&lt;Void&gt; deleteAllNotifications(@RequestHeader(&quot;X-User&quot;) String userEmail) {
+<span class="nc" id="L101">        notificationService.deleteAllNotifications(userEmail);</span>
+<span class="nc" id="L102">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Fire-and-forget email alert (used internally for critical events).
+     * Returns 202 Accepted since it runs asynchronously.
+     */
+    @PostMapping(&quot;/email&quot;)
+    public ResponseEntity&lt;Void&gt; sendEmailAlert(@RequestBody Map&lt;String, String&gt; payload) {
+<span class="fc" id="L111">        notificationService.sendEmailAlert(</span>
+<span class="fc" id="L112">                payload.get(&quot;toEmail&quot;),</span>
+<span class="fc" id="L113">                payload.get(&quot;subject&quot;),</span>
+<span class="fc" id="L114">                payload.get(&quot;body&quot;)</span>
+        );
+<span class="fc" id="L116">        return ResponseEntity.accepted().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

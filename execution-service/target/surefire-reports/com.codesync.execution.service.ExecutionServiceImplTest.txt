@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.codesync.execution.service.ExecutionServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.114 s -- in com.codesync.execution.service.ExecutionServiceImplTest
