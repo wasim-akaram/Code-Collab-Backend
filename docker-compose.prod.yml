@@ -51,6 +51,8 @@ services:
   api-gateway:
     image: ${DOCKERHUB_USERNAME}/codesync-api-gateway:latest
     container_name: api-gateway
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     environment:
