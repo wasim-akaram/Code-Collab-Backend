@@ -1,0 +1,165 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  codec:
+    max-in-memory-size: 15MB   # allow large file uploads to pass through the gateway
+
+  cloud:
+    gateway:
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://127.0.0.1:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Methods Access-Control-Allow-Headers, RETAIN_FIRST
+
+      routes:
+
+        # AUTH SERVICE
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+
+        # OAUTH2 - authorization initiation (Google/GitHub)
+        - id: auth-oauth2
+          uri: http://localhost:8081
+          predicates:
+            - Path=/oauth2/**
+          filters:
+            # Strip forwarded-host headers so auth-service uses its own address
+            # (localhost:8081) when building the redirect_uri sent to GitHub/Google.
+            # Without this, auth-service sees X-Forwarded-Host: localhost:8080 and
+            # builds redirect_uri=http://localhost:8080/... causing a provider mismatch.
+            - RemoveRequestHeader=X-Forwarded-Host
+            - RemoveRequestHeader=X-Forwarded-Port
+            - RemoveRequestHeader=X-Forwarded-Proto
+            - RemoveRequestHeader=X-Forwarded-For
+            - RemoveRequestHeader=X-Forwarded-Prefix
+
+        # OAUTH2 - callback from provider (GitHub/Google redirect here after auth)
+        - id: auth-oauth2-callback
+          uri: http://localhost:8081
+          predicates:
+            - Path=/login/oauth2/**
+          filters:
+            - RemoveRequestHeader=X-Forwarded-Host
+            - RemoveRequestHeader=X-Forwarded-Port
+            - RemoveRequestHeader=X-Forwarded-Proto
+            - RemoveRequestHeader=X-Forwarded-For
+            - RemoveRequestHeader=X-Forwarded-Prefix
+
+        # PROJECT SERVICE
+        - id: project-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/projects/**
+
+        # FILE SERVICE
+        - id: file-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/files/**
+
+        # COLLAB SERVICE
+        - id: collab-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/sessions/**
+
+        # COMMENT SERVICE
+        - id: comment-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/comments/**
+
+        # EXECUTION SERVICE
+        - id: execution-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/executions/**
+
+        # NOTIFICATION SERVICE
+        - id: notification-service
+          uri: http://localhost:8088
+          predicates:
+            - Path=/notifications/**
+
+        # VERSION SERVICE
+        - id: version-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/versions/**
+
+        # PAYMENT SERVICE
+        - id: payment-service
+          uri: http://localhost:8089
+          predicates:
+            - Path=/payments/**
+
+      discovery:
+        locator:
+          enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: ${JWT_SECRET}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /auth/v3/api-docs
+      - name: project-service
+        url: /projects/v3/api-docs
+      - name: file-service
+        url: /files/v3/api-docs
+      - name: collab-service
+        url: /sessions/v3/api-docs
+      - name: comment-service
+        url: /comments/v3/api-docs
+      - name: execution-service
+        url: /executions/v3/api-docs
+      - name: notification-service
+        url: /notifications/v3/api-docs
+      - name: version-service
+        url: /versions/v3/api-docs
+      - name: payment-service
+        url: /payments/v3/api-docs
+
+logging:
+  level:
+    root: INFO
+
+autoconfigure:
+  exclude:
+    - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

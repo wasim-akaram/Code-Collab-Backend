@@ -1,0 +1,2599 @@
+Wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+CASE STUDY DOCUMENT
+
+Online Code Collaboration Platform
+
+(Live Editor)
+
+CodeSync
+
+Code Together. Build Faster. Ship Smarter.
+
+Version 1.0 | 2026
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+1. Synopsis
+
+CodeSync is a full-stack Online Code Collaboration Platform that enables developers to write, execute,
+review, and version-control code in real time with teammates — all from a browser-based live editor,
+inspired by platforms like Replit and GitHub Codespaces. The system supports three primary roles:
+Guests (unauthenticated visitors who can browse public projects), Developers (registered users who
+create and collaborate on projects), and Administrators — each with a purpose-built interface.
+
+Developers can create projects in any supported programming language, manage a multi-file project
+tree, open a browser-based code editor with full syntax highlighting, start or join live collaboration
+sessions with real-time cursor sharing and co-editing, execute code in sandboxed containers, view
+output and errors inline, create version snapshots, compare diffs between versions, restore previous
+states, add inline code review comments, and manage project member access.
+
+CodeSync is architected as a microservices system modelled on the EShoppingZone reference pattern,
+with independent services for authentication/user management, project/repository management,
+file/editor management, real-time collaboration session management, code execution via sandboxed
+containers, version/snapshot control, code review comments, and notifications — all integrated through
+a Spring MVC website controller layer with WebSocket support for real-time collaboration.
+
+2. Detailed Requirements
+
+2.1 General Requirements
+
+* Guests can browse public projects, view code files, and search users without logging in.
+
+e Users must register or log in (email/password or GitHub/Google OAuth) to create or collaborate
+on projects.
+
+* Role-based access: Guest, Developer (project member/owner), and Admin.
+¢ All users can update their profile, username, avatar, bio, and password.
+
+¢ In-app and email notifications are dispatched for session invites, comments, mentions, and
+snapshot events.
+
+* Admin panel provides full user, project, execution, and session management with analytics.
+
+2.2 Guest Requirements
+
+* Browse and search public projects by language, name, or owner username.
+* View public project file trees and read code files in read-only mode.
+
+* View project descriptions, star counts, fork counts, and contributor lists.
+
+* Access the registration and login pages.
+
+2.3 Developer Requirements
+
+* Register and log in via email/password or GitHub/Google OAuth.
+
+* Create new projects with a name, description, programming language, and visibility (Public or
+Private).
+
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Create files and folder structures within a project; rename, move, and delete files.
+
+Edit code in the browser-based live editor with syntax highlighting, auto-indent, and bracket
+matching.
+
+Run code directly from the editor in a sandboxed container; provide custom stdin input; view
+stdout and stderr.
+
+Start a live collaboration session on any project file; share a session link or password-protect it.
+Join an active collaboration session; co-edit in real time with cursor presence indicators.
+See all active participants’ cursors and selections highlighted in distinct colours.
+
+Create a snapshot (commit) of any file with a commit message to save the current state.
+View the version history of a file; see who created each snapshot and when.
+
+Compare any two snapshots with a diff view highlighting added/removed lines.
+
+Restore a file to any previous snapshot state.
+
+Create named branches for parallel development within a project.
+
+Tag snapshots with release labels (e.g., v1.0.0).
+
+Fork any public project to create a personal copy for experimentation.
+
+Star projects to bookmark them for later reference.
+
+Add inline code review comments on specific lines of any file.
+
+Reply to existing comments in a threaded format.
+
+Resolve or unresolve comments to track code review progress.
+
+Invite specific users or generate a share link to add members to a private project.
+
+Kick participants from an active collaboration session.
+
+Receive in-app notifications for: session invites, comment replies, @mentions, new snapshots
+by collaborators.
+
+2.4 Admin Requirements
+
+View and manage all user accounts: suspend, reactivate, or permanently delete.
+View and moderate all projects; delete any project for policy violations.
+
+View all active collaboration sessions; terminate any session.
+
+View all code execution jobs; cancel any running job.
+
+Access platform analytics: total users, projects, executions, active sessions, code runs by
+language.
+
+Manage the set of supported programming languages and their sandbox images.
+Send platform-wide broadcast notifications to all or targeted users.
+View audit logs of all significant platform actions.
+
+2.5 Code Execution Requirements
+
+Execution runs in isolated Docker containers (sandboxes) with configurable CPU, memory, and
+time limits.
+
+Supported languages include: Python, Java, JavaScript (Node.js), C, C++, Go, Rust, Ruby,
+TypeScript, PHP, Kotlin, Swift, and R.
+
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Each execution job records: language, source code, stdin, stdout, stderr, exit code, execution
+time (ms), and memory used (KB).
+
+Jobs are queued and processed asynchronously; status transitions: QUEVED — RUNNING —
+COMPLETED / FAILED / TIMED_OUT / CANCELLED.
+
+A WebSocket channel delivers real-time stdout streaming during execution for long-running
+programs.
+
+Sandbox resource limits: max 10 seconds execution, max 256MB memory, no network access,
+no filesystem write outside /tmp.
+
+2.6 Collaboration Requirements
+
+Collaboration sessions are uniquely identified by a UUID session ID shared with invited
+participants.
+
+Each session is bound to a specific project file; multiple sessions can be active across different
+files of the same project.
+
+Operational Transformation (OT) or CRDT algorithm ensures consistency of concurrent edits
+across all participants.
+
+Cursor positions (line, column) are broadcast over WebSocket to all active participants in real
+time.
+
+Session owner can set a maximum participant limit and optionally require a password to join.
+
+Inactive sessions (no participant activity for 30 minutes) are automatically ended by a scheduled
+job.
+
+2.7 Version Control Requirements
+
+A Snapshot captures the full content of a file at a point in time, with a SHA-256 content hash for
+integrity verification.
+
+Each snapshot references its parent snapshot ID, forming a linked chain — the file's history
+DAG.
+
+Branches are named pointers to snapshot chains; a project always has a default 'main' branch.
+Diff computation uses the Myers diff algorithm to produce line-by-line change annotations.
+
+Restoring a snapshot creates a new snapshot (with the old content) rather than modifying
+history.
+
+2.8 Notification Requirements
+
+Notifications are dispatched for: session invite, participant joined/left, comment added, comment
+mention (@username), snapshot created, project forked.
+
+Each notification carries actorld, recipientld, relatedid (sessionld/commentid/snapshotld), and a
+deep-link URL.
+
+Unread notification badge count is shown in the navigation bar in real time via WebSocket push.
+Bulk broadcast is available for admin platform-wide announcements.
+Email notifications are sent for direct session invites and comment @mentions.
+
+Wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+3. Use Case Diagram
+
+The diagram below captures all actors and use cases within the CodeSync platform — spanning
+authentication, project management, file editing, live collaboration, code execution, version control,
+code review, notifications, and administrative management.
+
+Online Code Collaboration Platform — Use Case Diagram
+
+System
+(Automated)
+
+Project
+Owner
+
+Figure 1: CodeSync Online Code Collaboration Platform — Complete Use Case Diagram
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+3.1 Actors
+
+Actor
+
+Description
+
+Guest
+
+Developer
+
+Project Owner
+
+Admin
+
+System (Automated)
+
+Code Sandbox
+
+Unauthenticated visitor who can browse public projects and view code in
+read-only mode
+
+Registered user who creates projects, writes code, runs programs, and
+collaborates in real time
+
+Developer who created the project and has full control over members,
+sessions, and settings
+
+Platform administrator who manages users, projects, sessions, executions,
+and analytics
+
+Automated component handling inactive session cleanup, snapshot
+notifications, and scheduled jobs
+
+Isolated Docker container environment that safely executes submitted code
+
+3.2 Use Case Summary
+
+Use Case
+
+Register / Login
+
+Update Profile
+
+Actor(s) Description
+
+Guest, Developer Create account or authenticate via email or
+GitHub/Google OAuth
+
+Developer Change usemame, avatar, bio, or password
+
+Search Users / View Profile | Guest, Developer Find developers by username and view their
+
+Create Project
+
+Browse Public Projects
+
+Search / Filter Projects
+
+Fork Project
+
+Star / Bookmark Project
+
+Create / Rename File
+
+Edit Code in Live Editor
+
+Move / Delete File
+
+public projects
+
+Developer New project with name, language, description,
+and visibility setting
+
+Guest, Developer Explore public projects filterable by language or
+name
+
+Guest, Developer _ Find projects by name, owner, or programming
+
+language
+
+Developer Clone a public project into the developer's own
+account
+
+Developer Bookmark a project for quick access; increment
+
+the project's star count
+
+Developer Add a new file or folder to the project tree;
+rename existing ones
+
+Developer Write code with syntax highlighting, auto-indent,
+and bracket matching
+
+Developer Reorganise or remove files from the project's
+directory structure
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Use Case
+
+View File Tree
+
+Search Within Project
+
+Start Collaboration Session
+
+Join Session
+
+Real-Time Co-Editing
+
+See Live Cursors
+
+Kick Participant
+
+End Collaboration Session
+
+Run Code
+
+Provide stdin Input
+
+View stdout / stderr
+
+Cancel Execution
+
+View Execution History
+
+View Supported Languages
+
+Create Snapshot
+
+View File History
+
+Diff Two Snapshots
+
+Restore Snapshot
+
+Create Branch
+
+Tag Snapshot
+
+Actor(s)
+
+Guest, Developer
+Developer
+Developer
+Developer
+Developer
+Developer
+Project Owner
+Project Owner
+Developer, Code
+Sandbox
+Developer
+Developer
+Developer
+Developer
+Guest, Developer
+Developer
+Developer
+
+Developer
+
+Developer
+
+Developer
+
+Developer
+
+Description
+
+Navigate the hierarchical folder and file structure
+of a project
+
+Find text or code patterns across all files in a
+project
+
+Open a live co-editing session on a specific file
+with a shareable link
+
+Enter an active collaboration session via link or
+password
+
+Simultaneously edit the same file with all session
+participants
+
+View colour-coded cursor and selection positions
+of all co-editors
+
+Remove a specific participant from an active
+session
+
+Terminate the session, preventing new edits from
+being applied
+
+Submit code to a sandboxed container and
+receive output
+
+Supply custom standard input data for interactive
+program execution
+
+Read the program output and error streams after
+or during execution
+
+Terminate a running execution job before it
+completes
+
+Browse past execution jobs with status, output,
+and timing details
+
+See the list of available programming languages
+with version info
+
+Save the current state of a file with a descriptive
+commit message
+
+Browse the chronological list of snapshots for a
+file
+
+Compare any two snapshots with line-by-line
+difference highlighting
+
+Roll back a file to a previous snapshot state
+
+Create a named branch for parallel development
+on a project
+
+Attach a semantic version label (e.g., v1.0) toa
+specific snapshot
+
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Use Case
+
+Add Inline Comment
+
+Reply to Comment
+Resolve / Unresolve
+Comment
+
+Edit / Delete Comment
+View All Project Comments
+
+Receive Notifications
+
+Mark Read / All Read
+
+Manage All Users
+
+View Active Sessions
+
+End Session / Cancel Job
+View Platform Analytics
+Manage Supported
+Languages
+
+Send Platform Notification
+
+End Inactive Session
+
+Execute Code in Sandbox
+
+Actor(s)
+
+Developer
+Developer
+Developer,
+Project Owner
+Developer
+Developer
+
+Developer
+
+Developer
+
+Admin
+
+Admin
+
+Admin
+
+Admin
+
+Admin
+
+Admin
+
+System
+
+Code Sandbox
+
+Description
+
+Attach a code review comment to a specific line
+in a file
+
+Post a threaded reply under an existing comment
+
+Mark a comment as addressed or reopen it for
+further discussion
+
+Modify or remove own comments from the
+review thread
+
+See all open, resolved, and inline comments for
+a project
+
+Get in-app alerts for session invites, comments,
+and snapshots
+
+Dismiss individual or all unread notifications
+
+View, suspend, reactivate, or delete any user
+account
+
+Monitor all currently active collaboration sessions
+platform-wide
+
+Force-terminate any collaboration session or
+running execution
+
+Access total users, projects, runs by language,
+and session metrics
+
+Add, update, or disable programming languages
+and their sandbox images
+
+Broadcast an alert to all or a targeted group of
+users
+
+Auto-terminate sessions with no participant
+activity for 30 minutes
+
+Run submitted code in isolated container; return
+stdout/stderr/exitCode
+
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4, Class Diagrams — All Services
+
+CodeSync follows the same layered microservices architecture as the EShoppingZone reference
+system. Each service comprises five layers: Entity/POJO (domain model), Repository Interface (data
+access), Service Interface (business contract), Servicelmpl (business logic), and REST Resource (API
+exposure). The ten class diagrams below detail every service in the platform.
+
+Confidential | CodeSync Platform | Internal Use Only
+wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.1 Auth / User-Service
+
+The Auth/User-Service is the security gateway for the entire platform. It manages registration, login,
+JWT token lifecycle, OAuth2 provider integration (GitHub/Google), profile management,
+username/email changes, and account deactivation. The User entity carries a provider field to
+distinguish local accounts from OAuth-linked accounts, and a role field enabling role-based API gating
+across all services.
+
+Auth/User-Service — Class Diagram
+
+«Java Class»
+
+User
+
+-userld:int
+
+-usemame:String
+
+- email:String
+
+- passwordHash:String
+
+~ fullIName:String
+role:String
+avatarUrl:Sting
+
+- provider:String
+
+- IsActive:boolean
+
+~ crealedAtLocalDateTime
+
+- bio:String
+
+«Java Interface»
+
+UserRepository
+ser repository
+
++ findByEmail(Sting):Optional<User>
+
++ findByUserame(Stiing):Optional<User>
+usprRepo-
+
+— 797+ findByUserld(in)-User
+
++ existsByEmail(String):boolean
+
++ existsByUsemame(String):boolean
+
++ findAlIByRole (String):ListcUser>
+
++ searchByUsemame(String) List<User>
+
++ deleteByUseria(int):void
+
++ User)
++ getUseridg:int
+
++ setUserid(int):void
+
++ getUsermame(:Sting
+
++ setUsemame(String):void
++ getEmail() Siting
+
++ setEmail(String):void
+
++ getRole():Sting
+
++ setRole(String)-void
+
+«Java Interface»
+
+AuthService
+
++ register(User:User
++ login(Sting,String):String
+
++ logout(String):void
+
+«Jai
+
+AuthServicelmpl
+
++ ~jwiSecret:String
+- +tokenExpiry:iong
+
++ AuthServicelmpld
++ register(User):User
++ login(Sting,String):String
++ logout(String):void
+
++ refreshToken(String):String
++ getUserByEmail(String):User
+
+ss + getUseriyid(int):User
+’
+ah 1 updateProfile(int,User):User
+7 + changePassword(int,String):vold
+Vw oe + searchUsers(String):List<User>
+7
+
+- ~authService:AuthService
+
++ validateToken(Sting):boolean
+
++ AuthResource()
+
+Si } register(User):ResponseEntity
++ Token(St )
+isaciWet tonienn validateToken(String):boolean
+
++ login(Map):Res
+
+; i i nseEntity<Sting>
+| toString():Sting + refreshToken(String):Sting
+
++ logout(String):
+
+J + getUserByEmail(String):User ponscEntity
+
++ getUserByld(int):User + refresh(Sting):ResponseEntty
+
++ update Profile(int,User):User + getProfile(int):ResponseEntity
+
++ changePassword(int String):void + updateProfile({nt, User)-ResponseEntity
+
++ searchUsers(String):l ist<User> + changePassword(intMap):ResponseEntity
+
+Figure 2: Auth/User-Service — Class Diagram
+
+Component Type Responsibility
+
+User Java Class (Entity) Stores userld, username, email, passwordHash,
+fullName, role (DEVELOPER/ADMIN), avatarUrl,
+provider (LOCAL/GITHUB/GOOGLE), isActive,
+createdAt, bio
+
+findByEmail(), findByUsername(), findByUserld(),
+existsByEmail(), existsByUsername(),
+findAlIByRole(), searchByUsemame(),
+deleteByUserld()
+
+UserRepository Java Interface
+
+AuthServicelmpl Java Class Implements register, login, logout, JWT
+generation/validation, OAuth2 handling, profile
+update, password change, user search, account
+
+deactivation
+
+AuthService Java Interface Declares register(), login(), logout(),
+
+validateToken(), refreshToken(), getUserByEmail(),
+
+Confidential | CodeSync Platform | Internal Use Only
+e@
+woe
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Component Type Responsibility
+
+getUserByld(), updateProfile(), changePassword(),
+searchUsers(), deactivateAccount()
+
+AuthResource Java Class (REST) Exposes /auth/register, /auth/login, /auth/logout,
+fauth/refresh, /auth/profile (GET/PUT),
+fauth/password, /auth/search, /auth/deactivate
+
+Confidential | CodeSync Platform | Internal Use Only
+wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.2 Project / Repository-Service
+
+The Project/Repository-Service manages the top-level code project container. Projects have a visibility
+setting (PUBLIC or PRIVATE) controlling discoverability. The service tracks star counts and fork counts
+
+as denormalised fields for efficient sorting and display on discovery feeds. Forking creates a new
+project owned by the requesting user with the source project's file structure copied over via the
+
+File-Service.
+
+- projectid:int
+
+> owneria:int
+
+-name:String
+
+- description:String
+~language:String
+-visibility:String
+~templateld:int
+-isArchived:boolean
+
+- cleatedAtLocalDateTime
+-updatedAtLocalDateTime
+- starCountiint
+
+~forkCountint
+
+Project/Repository-Service — Class Diagram
+
++ findByOwnerld (int):List<Project>
++ findByProjectid(int):Optional<Project
+
+L _ PS/ReAAaByVisibility(String):List<Project>
+
++ findByLanguage(Sting):List<Project>
+
++ searchByName(String):List<Project>
+
++ findByMemberUserid(int):List<Project>
++ findBylsArchived(boolean):List<Project>
+
++ countByOwmerid (int):int
+
++ Project()
+1 getProjectid():int
+
++ setProjectid(int):void
+
++ getOwnerld():int
+
++ getName():String
+
++ setName(String):void
+
++ getLanguage():String
+
++ setLanguage(String):void
++ getVisibility():String
+
++ setVisibility(String):void
++ isArchived(:boolean
+
++ toString:Sting
+
++ hashCode(;int
+
++ equals(Object):boolean
+
+ProjectServicelmpl
+
++ ProjectServicelmpl9
++ createProject(Project):Project
++ getProjeciByld(in):Optional<Project>
++ getProjectsByOwner(int):List<Project=
++ getPublicProjects():List<Project>
++ searchProjects(Sting):List<Project>
++ getProjectsByMember(in)):List<Project>
++ updateProject(int, Project):Project
+7 + archiveProjeet(int)-void
+Ww + deleteProject(int):void
+vs ¥ forkProject(int,int):Project
+‘ ¥ starProject(int,int):void
++ getProjectsByLanguage(String)-List
+’ =,
+
+ProjectResource
+
++ createProject(Project):Project
++ getProjectByla(int):Optional<Project>
+
++ getProjectsByOwner(int):List<Project>
++ getPublicProjects():| ist<Project>
+ searchProjects(Sting):l ist<Project>
+
+1 getProjectsByMember(int):List<Project>
++ updatePraject(int,Project):Praject
+
+| archiveProject(int):void
+
+§ deleteProject(int):void
+
++ torkProject{int.int):Project
++ starProject(int.int}:void
+
++ getProjectsByLanguage(Sting) List
+
+- projeciService:ProjectService
+
+oetestetaetani eterna + ProjectResource()
++ creale(Project):ResponseEntity
+
++ gelByld(inl):ResponseEntity
+
++ gelByOwner(ini) ResponseEntiy<List>
+
++ ge(Public():ResponseEntiy<Li
++ search(Sting):ResponseEntity<List>
+
++ getByMember(int):ResponseEntity<Lis™
++ update(int,Project):ResponseEntity
+
++ archive(inty:ResponseEntity
+
++ delete(in)ResponscEntity
+
+Figure 3: Project/Repository-Service — Class Diagram
+
+Component Type Key Attributes / Methods
+
+Project Java Class (Entity) projectld, ownerld, name, description, language,
+visibility (PUBLIC/PRIVATE), templateld,
+isArchived, createdAt, updatedAt, starCount,
+
+forkCount
+
+findByOwnerld(), findByProjectld(),
+findByVisibility(), findByLanguage(),
+searchByName(), findByMemberUserld(),
+findBylsArchived(), countByOwnerld()
+
+ProjectRepository Java Interface
+
+createProject(), getProjectByld(),
+getProjectsByOwner(), getPublicProjects(),
+searchProjects(), getProjectsByMember(),
+updateProject(), archiveProject(), deleteProject(),
+
+ProjectServicelmpl Java Class
+
+Confidential | CodeSync Platform | Internal Use Only
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+Component Type
+ProjectService Java Interface
+ProjectResource Java Class (REST)
+
+wr
+BridgeLabz
+
+Key Attributes / Methods
+
+forkProject(), starProject(),
+getProjectsByLanguage()
+
+Declares all project CRUD, visibility management,
+search, fork, star, and member-based retrieval
+operations
+
+Exposes /projects endpoints: POST (create/fork),
+GET (by
+id/owner/member/public/language/search), PUT
+(update/archive/star), DELETE
+
+Confidential | CodeSync Platform | Internal Use Only
+wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.3 File / Editor-Service
+
+The File/Editor-Service manages the multi-file directory structure of each project. CodeFile records
+carry a path field (e.g., 'src/main/App.java') enabling nested folder hierarchies. The content field stores
+the full file text for files; folder entries carry an empty content. The updateFileContent operation records
+the lastEditedBy user ID and timestamp, providing attribution for collaborative edits. A soft-delete flag
+preserves deleted files for potential restoration.
+
+File/Editor-Service — Class Diagram
+
+«Jal Se «Java Interlace» «Je iss»
+CodeFile FileRepository FileServicelmpl
+file,cntity ‘ile.repositor
+- fileic:int
+~ projectid:int
+2 + findByProjectid(in)):List<CodeFile> + FileServicelmpld
+~name:String
+
+~ path:String
+~language:String
+
+> content:String
+
+- size‘long
+
+~ createdByld:int
+-lastEditedBy:int
+
+~ createdAt:LocalDateTime
+- updatedAtLocalDateTime
+
+- isDeleted:boolean
+
++ lindByFileld(int):Optional<CudeFile>
+b= 972° aByProjectidAndPath(nt,String):Optional
++ indByLanguage(String):List<CadeFile>
++ findByLastEditeaBy(int):List<CodeFile>
++ countByProjectid(int):int
+
+2
+
++ findBylsDeleted(boolean):List<CodeFile>
+
++ crealeFile(CadeFile):CodeFile
++ gelFileByld(in):Optional<CodeFile>
+
++ getFilesByProject(int):List<CodeFille>
+
++ getFileContent(ing:string
+
++ updateFlleContent(int String,int):CodeFile
++ renameflle(int,String):CodeF ile
+
++ deleteByFileld(nt):void
+
++ deleteFile(int):void
+
++ CodeFileQ
++ getFileld(:int
++ setFileld(int):void
+
+1 getProjectidg:int
+
++ getNameQ:String
+
++ getPath(:String
+
+1 setPath(String):void
+
++ getContent(:sting
+
+! setContent(String):void
++ getLanguage():String
+
++ toString():String
+
++ hashCode():int
+
++ equals(Object):boolean
+
+/a Interface»
+
+FileService
+
+7 | + restoreFiic(int):void
+
+ye + moveFlie(int,String):CodeFile
+oe + createFolder(int,String):void
+¢
+¢ + getFileTree(int):List<CodeFile>
+ZAewice
+e + searchinProject(int,String):List
+
+, «Java Class»
+rie FileResource
+
+‘ le.res
+
++ createFile(CodeFile):CadeFile
+
++ getFile2yid(int):Optional<CadeFile>
+
+} getFileContent(inty:String
+
+| renameFile(int,String):Coderile
+
+| deleteFile(int):void
+
+F restoreFile(int):void
+
++ moveFile(int,String):Coderile
+
+Component
+
+CodeFile
+
+FileRepository
+
+FileServicelmpl
+
++ getFile Tree(int):List<CoceFile>
+
++ searchinProject(int String):List
+
++ getFilesByProject(int):l ist<CodeFile>
+
+| updateFtleContent(nt,String,int):‘Caderile
+
+- -fileService:FileService
+
+SRR SSS ecSe hese eo + FileResource()
++ create(CodeFile):ResponseEntily
+
++ gelByld(nt):ResponseEntity
+
++ yelByProjeci{inl):ResponseEntily<List>
++ gelContent(nt):ResponseEntity<Sting>
++ updateContent(intString,in):RE
+
++ rename(int String):ResponseEntity
+
++ delete(in)ResponseEntity
+
++ restore(int):ResponseEntity
+
++ move(int,String)ResponseEntity
+
+Figure 4: File/Editor-Service — Class Diagram
+
+Type
+Java Class (Entity)
+
+Java Interface
+
+Java Class
+
+Key Attributes / Methods
+
+fileld, projectld, name, path (full directory path),
+language, content (full text), size (bytes),
+createdByld, lastEditedBy, createdAt, updatedAt,
+isDeleted
+
+findByProjectld(), findByFileld(),
+findByProjectldAndPath(), findByLanguage(),
+findByLastEditedBy(), countByProjectld(),
+findBylsDeleted(), deleteByFileld()
+
+createFile(), getFileByld(), getFilesByProject(),
+getFileContent(), updateFileContent(),
+renameFile(), deleteFile(), restoreFile(), moveFile(),
+createFolder(), getFileTree(), searchInProject()
+
+Confidential | CodeSync Platform | Internal Use Only
+
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+FileService Java Interface Declares all file CRUD, content update with
+
+attribution, rename/move, soft-delete/restore, folder
+creation, tree retrieval, and in-project search
+operations
+
+FileResource Java Class (REST) Exposes /files endpoints: POST
+(create/createFolder), GET (by
+id/project/content/tree/search), PUT
+(updateContent/rename/move), DELETE, POST
+(restore)
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.4 Collaboration / Session-Service
+
+The Collaboration/Session-Service manages real-time co-editing sessions. Each CollabSession is
+bound to a specific file and tracked by a UUID session ID. The Participant entity records each user who
+joins, their assigned cursor colour, and their live cursor position (line and column). Session state is
+distributed via WebSocket (STOMP) — every edit, cursor move, and participant join/leave event is
+
+broadcast to all active session members.
+
+Collaboration/Session-Service — Class Diagram
+
+~ sessionid:Stnng
+~ projectid:int
+
+-fileic:int
+
+~ ownerla:int
+
+~ status:String
+~language:String
+
+- createdAt:LocalDateTime
+-endedAt:LocalDateTime
+
+- maxParticipants.int
+~isPasswordProtected:boolean
+
+- sessionPassword:String
+
++ CollabSessionQ)
++ getSessionid():String
+
+1 setSessionid(Stiing):void
+
++ getProjectid():int
+
++ getFileld():int
+
++ getOwnerld():int
+
++ getStatus():String
+
++ setStatus(String):void
+
++ isPasswordProtected():boolean
++ toString():String
+
++ hashCode(jint
+
++ equals (Object):boolean
+
+- participantic:int
+
+- sessiontd:String
+-userid:int
+
+-role:String
+FSR ocalDateTime
+- leftAtLocalDateTime
+
+- cursorLine:int
+
+- cursorCol:int
+
+- color:String
+
++ findBySessionld(Suing):Optional<CollabSession> = CollabServicelinplo
+
++ nic DK 01
+
+éSRGBYPrO|ectid (nt):List<CollabSession>
+°") + tindByFiletd(iny :List<CollabSession> ~ getSesslonByla(String):Optional
+~ getSessionsByProject(int):List
+
+= JoinSession(String,Int,Sting):Participant
+
++ findActiveByProjectid(int):List
++ findPanicipantsEySessionid(String):List
++ findByOwnerid(int):List<CollabSession> + leaveSession(String,int):vold
++ endSession(String):void
+
+= getParticipants(Sting):L ist<Pantcipant>
+
++ countParticipants(String):int
+
++ Participant
++ getPartcipantia():int
+
++ getSessionidQ:String
+
+¥ getUserld():int
+ getRole():String
+
++ setRole(String):void
+
++ getCursorLine():int
+
++ setCursorLine(int):void
++ getCursorCal(int
+
++ toString():String
+
++ updateCursar(String,int,int,int)-void
+
+broadeastChange(String String):void
+
+«Java Inter
+CollabService
+
+- ~collabService:CollabService
+
++ create Session(CollabSession):Ce
+~ CollabResourced,
+
+~ create(CollabSession)RE
+~ getByld(String)-ResponscEntity
+
++ getSessionByld(String) Optional
++ getSessionsByProject(int):List
+
++ joinSession(String jint,String):Participant
+
+Component
+
+CollabSession
+
+Participant
+
+CollabRepository
+
+Type
+
+Java Class (Entity)
+
+Java Class (Entity)
+
+Java Interface
+
++ gotByProject(int):RE<List>
++ leaveSession(String,int):void eee ney
++ join(String int,String):RE
+
++ endSession(String):void
+
++ getParticipants(String):List<Perticipant>
+
++ leave(String,int):RE
+
+— ; + end(String):ResponseEntity
++ updateCursor(String int.int,int):void
+
+ing):RE<List>
+
+. getParticipants(S'
++ broadcastChange(String,String):void
+updateCursar(Sting,Map) RE
+
++ kickParticipant(String in):void
+kick(String ,int):ResponseEntity
+
++ gelActiveSession(intint):Optional
+getActive(int int): esponseEntity
+
+Figure 5: Collaboration/Session-Service — Class Diagram
+
+Key Attributes / Methods
+
+sessionld (UUID), projectld, fileld, ownerld, status
+(ACTIVE/ENDED), language, createdAt, endedAt,
+maxParticipants, isPasswordProtected,
+sessionPassword
+
+participantid, sessionld, userld, role
+(HOST/EDITOR/VIEWER), joinedAt, leftAt,
+cursorLine, cursorCol, color (unique per session)
+— linked to CollabSession (0..*)
+
+findBySessionld(), findByProjectld(), findByFileld(),
+
+findActiveByProjectld(),
+findParticipantsBySessionld(), findByOwnerld(),
+
+countParticipants()
+
+Confidential | CodeSync Platform | Internal Use Only
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+CollabServicelmpl Java Class createSession(), getSessionByld(),
+
+getSessionsByProject(), joinSession(),
+leaveSession(), endSession(), getParticipants(),
+updateCursor(), broadcastChange(),
+kickParticipant(), getActiveSession()
+
+CollabService Java Interface Declares all session lifecycle, participant
+management, cursor update, and broadcast
+operations
+
+CollabResource Java Class (REST) Exposes /sessions endpoints: POST (create), GET
+
+(by id/project), POST (join/leave/end/kick), PUT
+(updateCursor), GET (participants/active)
+
+Confidential | CodeSync Platform | Internal Use Only
+wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.5 Version / Snapshot-Service
+
+The Version/Snapshot-Service provides Git-inspired version control for project files. Each Snapshot
+captures the full file content at a point in time with a SHA-256 hash for integrity, a commit message, a
+parent snapshot ID forming the history chain, and a branch label. The service supports branch creation,
+snapshot tagging, diff computation (Myers algorithm), and non-destructive restore (restore creates a
+new snapshot with the old content).
+
+Version/Snapshot-Service — Class Diagram
+
+«Jal
+
+Snapshot
+
+it
+
+~ snapshotld:int
+
+~message:String
+
+~content:String
+hash:Sting
+parentSnapshotd:int
+braneh:Sting
+
+~tag:Suing
+
+- createdAtLucalDaleTime
+
+«Java Interface»
+SnapshotRepository
+
+version.repasitory
+
+LSPs 4AGERPA uthorid (int):List<Snapshol>
+
++ lindByBranch (Stiing):ListeSrapshot>
+
++ findBySnapshoild(in):OptionalcSnapshot>
++ findByHash(String):OptionaleSnapshot>
+
++ findByTag(String) OptionalSnapshot>
+
++ Ppotoestevese(esr oer
+
++ Snapshat()
+
++ getSnapshotid(:int
+
++ setSnapshotid(int) void
++ getProjectid(:int
+
++ getFileldg:int
+
++ geuthorldg:int
+
++ yelMessage(:String
+
++ selMessage(Sting):void
++ getHash0:String
+
++ getBranch0;String
+
++ getParentSnapshotld()int
++ toString():String
+
++ hashCode():int
+
++ equals(Object):boolean
+
+interface»
+
+VersionService
+
++ createSnapshot(Snapshot):Snapshot
++ getSnapshotByld(int):Optional<Snapshot>
++ getSnapshotsByFile(int):List<Snapshot>
+
++ getSnapshotsByProject(int):List<Snapshot>
++ getSnapshotsByBranch(intString):List
+
++ getLatestSnapshot(int):Optianal
+
+} restoreSnapsho(int,int) CodeFile
+
++ diffSnapshots(int.in):Sting
+
++ createBranch(nt,String):void
++ tagSnapshot(int,String):vold
+
++ getFileHistory(int):List<Snapshot>
+
+«Java Clas:
+
+VersionServicelmpl
+
+- projectid:int
+Pte + findByProjectid(int):List<Snapshot> + VersionServiceimpiq
+ort + findByFileld(int):List<Snapshot~ + createSnapshot(Snapshot):Snapshot
+
++ gelSnapshoiByld(in)):Optional<Snapsho>
++ getSnapshotsByFile(in)):ListcSnapshot>
+
++ gelSnapshotsByProject(int):List<Snapshol>
++ getSnapshotsByBranch(int, Sting):List
+
++ getLatestSnapshot(int):Optional
+
++ restoreSnapshot(int,int):CodeFile
+
++ diffSnapshots(intint):String
+
++ createBranch(int,String):void
+
++ tagSnapshox(int,String):void
+
+F getFileHistory(int):List<Snapshor>
+
+«Java Class»
+
+VersionResource
+
+- ~versionService VersionService
+
++ VersionResouree()
++ create(Snapshot):ResponscEntity
+
++ getByld(int);ResponseEntiy
+
++ gelByFile(inl):ResponiseEnility<List>
+
++ gelByProjeci(int):ResponseEntity<List>
+
++ ge(ByBranch(int,Sting):ResponiseEntity<List>
++ getLatest(int):ResponseEntity
+
++ restore(int,int):ResponseEntity
+
++ difffint,int): ResponseEntity<String>
+
++ tanvint GhinaRacnanesEntiny
+
+Figure 6: Version/Snapshot-Service — Class Diagram
+
+Component Type Key Attributes / Methods
+
+Java Class (Entity) snapshotld, projectld, fileld, authorld, message
+
+(commit message), content (full file text), hash
+(SHA-256), parentSnapshotld, branch, tag,
+createdAt
+
+findByProjectld(), findByFileld(), findByAuthorld(),
+findByBranch(), findBySnapshotld(), findByHash(),
+findByTag(), findLatestByFileld()
+
+Snapshot
+
+SnapshotRepository Java Interface
+
+createSnapshot(), getSnapshotByld(),
+getSnapshotsByFile(), getSnapshotsByProject(),
+getSnapshotsByBranch(), getLatestSnapshot(),
+restoreSnapshot(), diffSnapshots(), createBranch(),
+tagSnapshot(), getFileHistory()
+
+VersionServicelmpl Java Class
+
+Confidential | CodeSync Platform | Internal Use Only
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+VersionService Java Interface Declares all snapshot CRUD, branch management,
+
+tag assignment, diff computation, restore, and
+history retrieval operations
+
+VersionResource Java Class (REST) Exposes /versions endpoints: POST
+(create/createBranch/tag), GET (by
+id/file/project/branch/history/latest), POST (restore),
+GET diff(int,int)
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.6 Code Execution-Service
+
+The Code Execution-Service manages secure code execution in isolated Docker sandbox containers.
+Each ExecutionJob is submitted asynchronously, queued in RabbitMQ, and processed by a worker
+pool. The service enforces strict resource limits (CPU, memory, time) per container. stdout streaming is
+delivered via WebSocket for interactive programs. The service also maintains a registry of supported
+
+languages with their sandbox image tags and runtime versions.
+
+«Java Class»
+
+ExecutionJob
+
+~ sourceCode:String
+- stdin:String
+- status:String
+- stdout:String
+stderr:String
+exitCode:int
+- executionTimeMs:long
+- memoryUsedKb:long
+- createdAt:LocalDateTime
+
+- completedAtLocalDateTime
+
+Code Execution-Service — Class Diagram
+
+«Java Interface»
+ExecutionRepositary
+
+ findByStatus(String):L ist<ExecutionJob>
++ findByLanguage(String):List<ExecutionJob>
++ findByCreatedAtBetween(LDT,LDT):List
+
++ counlByUserld(in)int
+
+«Java Interface»
+
+ExecutionService
+
++ ExecutionJob0
++ geUJobld:Sting
+
++ setJobld(String)void
+
++ getProjectid():int
+
+1 getLanguage():String
+
++ getSourceCadeQ):Sting
++ getStatusQ:Sting
+
++ setStatus(String):vold
+
++ getStdoul0:String
+
++ setSidoul(String):void
+
++ getExitCode(jint
+
++ getExecutionTimeMs(:long
+
+| toStrinalyStrinn
+
+Component
+
+ExecutionJob
+
+ExecutionRepository
+
+ExecutionServicelmpl
+
+Java Class (Entity)
+
++ submitxecution(ExecutionJob):ExecutionJob
++ gelJobByld(Sting):Optional<ExecutionJob>
+
++ getExecutionsByUser(int):List
+
++ getExecutionsByProject(int):List
+
++ cancelExecution(String):void
+
++ get=xecutionResult(String):ExecutionJob
+
++ getSupportedL anguages():List<String>
+
++ getLanguageVersion(String):String
+
++ get=xecutionStats(int):Map
+
+«Java Class»
+
+ExecutionServicelmpl
+
+L
+
+- jobia:String - -dackerRunner:DockerService
+projectid:int ~sandboxPool:SandboxPoo!
++ findByJobid(String):OptionalExecutionJob>
+tleld:int
++ findByUserld(nt):List<ExecutionJob> + ExecutionServicelmpi()
+- userid:int -exbeRepo
+. Fo = 4 | findeyProjectid(int) List<ExecutionJob> } submitExecution(ExecutionJob):ExecutionJob
+-language:String
+
++ getJooByld(String) Optional<executianJob>
++ getExecutionsByUser(int):List
+
++ getExecutlonsByProjeci(int):List
+
++ cancelExecution(Suing):void
+
++ gelExecutionResull(Sting):ExecutionJob
+
++ getSupportedLanguages(:List<String>
+
++ getLanguageVersion(String) String
+
+F getExecutionStats(int):Map
+
+«Java Class»
+
+ExecutionResource
+
+- ~execService:ExecutionService
+
++ ExeculionResource()
++ submil(ExecutionJob):ResponseEntily
++ getJob(String):ResponseEntity
+
++ getByUser(int):ResponseEntity<List>
+
+1 getByProject(int):ResponseEntity<List>
++ cancel(String):ResponseEntity
+
++ getResult(Swing):ResponscEntity
+
++ getSupportedLanguages0:RE<List>
+
++ getLanguageVersion(String)RE<Stiing>
+
+Figure 7: Code Execution-Service — Class Diagram
+
+Type
+
+Key Attributes / Methods
+
+sourceCode, stdin, status
+(QUEUED/RUNNING/COMPLETED/FAILED/TIME
+D_OUT/CANCELLED), stdout, stderr, exitCode,
+executionTimeMs, memoryUsedkb, createdAt,
+completedAt
+
+Java Interface
+
+jobld (UUID), projectld, fileld, userld, language,
+
+findByJobld(), findByUserld(), findByProjectid(),
+
+findByStatus(), findByLanguage(),
+findByCreatedAtBetween(), countByUserld()
+
+Java Class
+
+submitExecution(), getJobByld(),
+
+getExecutionsByUser(), getExecutionsByProject(),
+cancelExecution(), getExecutionResult(),
+getSupportedLanguages(), getLanguageVersion(),
+getExecutionStats()
+
+Confidential | CodeSync Platform | Internal Use Only
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+ExecutionService Java Interface Declares code submission, async job tracking,
+
+cancellation, result retrieval, language registry, and
+usage stats operations
+
+ExecutionResource Java Class (REST) Exposes /executions endpoints: POST (submit),
+GET (by jobld/user/project), POST (cancel), GET
+(result/supportedLanguages/languageVersion/stats
+
+Confidential | CodeSync Platform | Internal Use Only
+wr
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+4.7 Comment / Code-Review-Service
+
+The Comment/Code-Review-Service enables inline code review comments anchored to specific lines of
+a file. Comments support two-level threading via parentCommentid. The resolved flag enables a review
+workflow where comments are marked addressed when the underlying code issue is fixed. Comments
+are linked to a snapshotld so they remain contextually correct even after subsequent file edits.
+@mention parsing triggers Notification-Service calls.
+
+Comment/Code-Review-Service — Class Diagram
+
+> commentld.int
+
+~ projectld:int
+
+-fileld:int
+
+- authorid:int
+
+~ content:String
+
+~lineNumberiint
+
+~ columnNumber:int
+
+- parentCommentid:Integer
+resolved:hoalean
+snapshotid:int
+createdAtLocalDateTime
+
+- updatedAt:LocalDateTime
+
++ findByFilela(ind):List«Comment>
++ findByProjectia(iny):List<Comment
+— = 4S PR uthorid(nt):List<comment>
+
++ courtByFileld(int):int
+
++ deleteByCommentid(int): fe
+
++ findByLineNumber(intint):List<Comment>
+
++ findByParentCommentid(in)):List<Cornment>
+
++ findByResolved(boolean):Lisi<Commen>
+
++ CommentServicelmplo
++ addComment(Comment):Comment
+
++ getByFlie(int) List<Comment>
+
++ getByProject(int):List<Comment>
+
++ ge(CommentByld():Optional<Comment>
++ getReplies(int):List<Comment>
+
++ updateComment(nt,String): Comment
+
++ deleteCommentiint):void
+
++ Comment()
++ getCommentid():int
+
++ setCommentic(int):vaid
+
+4 getProjectid():int
+
++ getFileldQ:int
+
++ getAuthoridg:int
+
++ getContent0:Sting
+
++ setContent(Swing):vold
+
++ getLineNumberd:int
+
++ isResolved(:boolean
+
++ se(Resulved(boolean):void
++ toString Q:Sting
+
++ hashCode(:int
+
++ equals(Object):boolean
+
+«Java Interface»
+
+CommentService ¢
+
+wf + resolveComment{int):void
+’ -
+’ + unresolveCommenttint):void
+7
+ie + getByLine(int int):List<Comment>
+z
+Pic hdatad + getCommentCount(int):int
+,
+’
+¢
+¢
+‘
+’
+,
+“wf
+- -~commentService:CommentService
+
++ addComment(Comment):Comment
+1 getByFile(int)-List<Comment>
+
+| getayProject(int):ListsComment>
+
++ getReplies(nt):List<Commen>
+
++ deleteCommentiint):vold
+
++ resolveComment(int):vold
++ unresolveComment(int):void
+
+Component
+
+Comment
+
+CommentRepository
+
+CommentServicelmpl
+
++ getByLine(intin):List<Comment>
+
++ getCommentByid(int)-Optional<Comment>
+
++ updateComment(int,Sting):Comment
+
++ CommentResource)
++ addComment(Comment):ResponseEntity
+
++ gelByFile(inl)ResponseEniily<List>
+
++ gelByProjeci(int):ResponseEntity<List>
++ getByld(int):ResponseEntiy
+
++ getReplies(int):ResponseEntity<List>
+
++ updateComment(int,String):RE
+
++ deleteCommentiint):ResponseEntity
+
++ resolve(int)ResponseEntity
+
++ unresolve(int):ResponseEntitv
+
+Figure 8: Comment/Code-Review-Service — Class Diagram
+
+Type
+Java Class (Entity)
+
+Java Interface
+
+Java Class
+
+Key Attributes / Methods
+
+commentid, projectld, fileld, authorld, content,
+lineNumber, columnNumber, parentCommentid
+(nullable for top-level), resolved, snapshotld,
+createdAt, updatedAt
+
+findByFileld(), findByProjectld(), findByAuthorld(),
+findByLineNumber(), findByParentCommentld(),
+countByFileld(), findByResolved(),
+deleteByCommentld()
+
+addComment(), getByFile(), getByProject(),
+getCommentByld(), getReplies(),
+updateComment(), deleteComment(),
+resolveComment(), unresolveCommeni(),
+getByLine(), getCommentCount()
+
+Confidential | CodeSync Platform | Internal Use Only
+
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+CommentsService Java Interface Declares all comment CRUD, reply threading,
+
+resolve/unresolve lifecycle, line-based retrieval,
+and count operations
+
+CommentResource Java Class (REST) Exposes /comments endpoints: POST (add), GET
+(by file/project/id/line), GET replies, PUT
+(update/resolve/unresolve), DELETE, GET count
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.8 Notification-Service
+
+The Notification-Service dispatches and persists in-app and email alerts for all key collaboration events:
+session invites, participant joins, comment additions, @mentions, and new snapshots from
+collaborators. Notifications carry an actorld (who triggered the event), relatedid (the related entity:
+sessionld, commentid, etc.), and relatedType for deep-linking. Real-time delivery of the unread badge
+count is pushed to the recipient via WebSocket.
+
+- notificationld:int
+
+- recipienti¢:int
+
+- actorid:int
+
+- type:String
+
++ title:String
+-message:String
+
+~ relatedid:int
+
+- telatedType:String
+- isRead:boolean
+
+ereatedAt:LocalDateTime
+
+-ndiitkee;
+
++ Notification()
++ getNotificationia():int
+
++ getRecipientid(jint
+
++ getActorld(j:int
+
++ getType():String
+
+1 getTitle():String
+
++ getMessage():String
+
++ getRelatedid(:int
+
++ getRelatedType():String
+
++ IsRead():boolean
+
++ setRead(boolean):vold
+
++ getCreatedAt():LocalDateTime
++ toStringQ:Stiing
+
+Component
+
+Notification
+
+NotificationRepository
+
+Java Class (Entity)
+
+Java Interface
+
+Notification-Service — Class Diagram
+
+«Java Interface»
+
+NotificationRepositary
+
+ass»
+NotificationServicelmp!
+
+- ~emailSender:JavaMailSender
+
++ findByRecipientid(nt):List<Notification>
++ find8yRecipientidAndisRead(int,boolean):List
+
+* countByReciplentidAndisRead(int,ooolean}:nt
++ findByType(Stiing):List<Notification>
+
++ findByRelatedIu(in))-List<Notiication>
+
++ deleteByNolificationid(int):void
+
++ deleeByRecipientidAndisRead(int boolean):void
+|
+
+«Java Interface»
+
+NotificationService ee
+
++ send(Notification):void
+
++ NotificationServiecimpl()
++ send(Notification):void
+
++ sendBulk(List<integer>,String, String):vold
++ markAsRead(int):vold
+
++ markAliRead(int):void
+
++ deleteRead(inl):void
+
++ gelByRecipient(in)):List<Notification>
+
++ getUnreadCount(int):int
+
++ deleteNotification (int):void
+
++ sendEmail(String, String, String).void
+
++ getAll):List<Notification>
+
+ass:
+
+nResource
+
+- ~notifService:NotificationSer
+
++ sendBulk(List<integer>,Sting,String):void
++ markAsRead(int):void
+
++ markAliRead(int):void
+
++ deleteRead(in):void
+
++ getByRecipientiin)):List<Notification>
+
++ getUnreadCountiinty:int
+
++ deleteNotification(int):void
+
++ sendEmail(String String String):void
+
+§ NotificationResaurce()
+
++ getRyRecipient(int)RE<L is>
+
++ markAsRead(int):ResponscEntity
++ markaliRead(int):ResponscEntiy
++ deleteRead(int):ResponseEntity
++ getUnreadCount(in):RE<integer>
+
++ deleleNoiification(inl):RE
+
++ sendBulk(List<Integer> Sting, Sting):RE
+
+Figure 9: Notification-Service — Class Diagram
+
+Type
+
+Key Attributes / Methods
+
+notificationld, recipientld, actorld, type
+
+(SESSION_INVITE/COMMENT/MENTION/SNAPS
+HOT/FORK), title, message, relatedld, relatedType,
+
+isRead, createdAt
+
+findByRecipientld(), findByRecipientIdAndilsRead(),
+
+countByRecipientidAndlsRead(), findByType(),
+findByRelatedld(), deleteByNotificationld(),
+deleteByRecipientIdAndisRead()
+
+send(), sendBulk(), markAsRead(), markAllRead(),
+deleteRead(), getByRecipient(), getUnreadCount(),
+deleteNotification(), sendEmail(), getAll()
+
+NotificationServicelmpl Java Class
+
+Declares notification dispatch (single/bulk/email),
+retrieval, read-state management, and deletion
+operations
+
+NotificationService Java Interface
+
+Confidential | CodeSync Platform | Internal Use Only
+e
+Wwe
+
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Component Type Key Attributes / Methods
+NotificationResource Java Class (REST) Exposes /notifications endpoints: getByRecipient,
+
+markAsRead, markAllRead, deleteRead,
+getUnreadCount, delete, sendBulk, getAll
+
+Confidential | CodeSync Platform | Internal Use Only
+e@
+woe
+BridgeLabz
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+4.9 Website-Controller (MVC Layer)
+
+The Website-Controller is the Spring MVC integration layer that wires all underlying microservices
+together and renders views for developers and administrators. It contains three controllers —
+EditorController, ProjectController, and AdminController — each injecting relevant service
+dependencies via Spring @Autowired. WebSocket message handlers are co-located in the
+EditorController for real-time collaboration event routing.
+
+Website-Controller — Class Diagram
+
+SS» «Java Class» «Java Class»
+AdminController
+
+EditorController ProjectController
+
+~authService:AuthService ~projectService:ProjectService ~authService:AuthService
+
+- ~projectService:ProjectService - ~fileService:FileService - ~projectService:ProjectService
+
+- ~fileService:File Service - ~versionService:VersionService - ~execService:ExecutionService
+
+~collabService:CollabService -commentService:CommentService ~notifService:NotificationService
+
+> ~execService:ExecutionService ~ -collabService:CollabService
++ AdminController,
+
+- ~versionService:VersionService - ~notifService:NotificationService
+
+-~commentService:CommentService
+
+- -NatifService:NotificationService
+
++ ProjectController()
+= viewProjects(:ModelAndView
+
++ EgitorConwoller(,
++home():String
+
++ register(User Model) String
+
++ login (Model, String, String,Principal):String
++ viewDashboard():ModelAnd View
+
++ viewProfile(in):ModelAndView
+
++ editProfile(User,Modal):String
+
++ searchUsers(String,Model):MadelAndView
++ viewProject(in):ModelAnd View
+
++ createProject(Project): ModelAndView
+
++ forkProject(int):ModelAncView
+
++ openEditor(int,int):ModelAndView
+
++ createFille(int, CodeFile):ModelAnaView
+
+viewProjectDetail(int):ModelAndView
++ createProject(Project): ModelAndView
++ edilProject(nl, Project): ModelAndView
+archiveProject(int):RespanseEntity
+= deleteProject(int):String
++ slarProject(inl):ResponseEntily
++ viewMembers(int):ModelAndView
++ acdMember(int,int,String):Responseéntity
++ removeMember(intint):ResponseEntity
++ viewVersionHistory(int): ModelAndView
++ viewBranches(int)MocelAndView
+
++ createBranch(int,Sting):ResponseEntity
+
++ tagSnapshot(int.Sting):ResponseEntity
+
++ adminDashboard():ModelAnc View
++ manageAllUsers():ModelAndView
+
++ suspendUser(Ind:Stting
+
++ deleteUser(in):Sting
+
++ manageAllProjects(): ModelAndView
+
++ deleteProject(in):String
+
++ viewAllExecutians():ModelAndView
+
++ cancelExecution(String):ResponseEntity
+
++ viewPlatform/Analylics):ModelAndView
+
++ viewActiveCollabSessions():ModelAndView
++ endSession(String):Responseentity
+
++ sendPlatforNotification(Suing.Sting):Sting
++ viewAuditLogs(:ModelAndview
+
++ manageSupportedL anguages():ModelAndView
+
+@ Autnsenice
+
+@ ExecutionService
+
+Controller @Autowired Service Dependencies
+@ ProjectService @ Fileservice
+
+@ VersionService @ CommentService
+
+@ collabservice
+
+@ NotificationService
+
++ restoreSnapshot(intint):RE
+
+Figure 10: Website-Controller — Class Diagram
+
+Controller Type Key Methods
+
+Java Class (MVC) home(), register(), login(), viewDashboard({),
+viewProfile(), editProfile(), searchUsers(),
+viewProject(), createProject(), forkProject(),
+openEditor(), createFile(), deleteFile(),
+getFileTree(), startSession(), joinSession(),
+runCode(), getResult(), viewHistory(),
+
+restoreSnapshot(), viewNotifications(), logout()
+
+EditorController
+
+Java Class (MVC) viewProjects(), viewProjectDetail(),
+createProject(), editProject(), archiveProject(),
+deleteProject(), starProject(), viewMembers(),
+addMember(), removeMember(),
+viewVersionHistory(), viewBranches(),
+
+createBranch(), tagSnapshot(), diffSnapshots(),
+
+ProjectController
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+Controller Type Key Methods
+
+viewComments(), addComment(),
+resolveComment(}, viewPublicProjects()
+
+AdminController Java Class (MVC) adminDashboard(), manageAllUsers(),
+suspendUser(), deleteUser(),
+manageAllProjects(), deleteProject(),
+viewAllExecutions(), cancelExecution(),
+viewPlatformAnalytics(),
+viewActiveCollabSessions(), endSession(),
+sendPlatformNotification(), viewAuditLogs(),
+manageSupportedLanguages()
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+5. Microservices Architecture Overview
+
+CodeSync is structured as a set of independently deployable microservices following the
+EShoppingZone reference pattern. Each service owns its own database schema, REST API contract,
+service interface, and business logic. Synchronous inter-service calls use RestTemplate; real-time
+collaboration and execution streaming use WebSocket (STOMP); asynchronous execution jobs are
+routed via RabbitMQ.
+
+Microservice Base Package Primary Domain
+
+auth-service com.codesync.auth User accounts, JWT, OAuth2
+(GitHub/Google)
+
+project-service com.codesync. project Project CRUD, visibility, forking,
+starring, member access
+
+file-service com.codesync.file File/folder CRUD, content
+management, file tree, in-project
+search
+
+collab-service com.codesync.collab Live session lifecycle, participant
+management, cursor broadcasting
+
+execution-service com.codesync.execution Sandboxed code execution, job
+tracking, language registry
+
+version-service com.codesync.version Snapshot creation, file history, diff,
+branch, restore, tag
+
+comment-service com.codesync.comment Inline code comments, threading,
+resolve workflow, @mentions
+
+notification-service com.codesync.notification In-app and email alerts, bulk dispatch,
+real-time unread count
+
+codesync-web com.codesync.web Spring MVC controllers, Thymeleaf /
+React view rendering, WebSocket
+handlers
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+6. Non-Functional Requirements
+
+Category Requirement
+
+Performance
+
+Scalability
+
+Security
+
+Availability
+
+Sandbox Isolation
+
+Concurrency
+
+Collaboration Sync
+
+Version Integrity
+
+Auto Cleanup
+
+Audit Trail
+
+Usability
+
+Maintainability
+
+Editor load (file content + syntax highlighting) must render within 1
+second; WebSocket message round-trip latency under 50ms for
+collaboration events
+
+Microservices independently scalable via Docker/Kubernetes; Redis
+Pub/Sub distributes WebSocket events across multiple server
+instances
+
+Passwords stored as berypt hashes; JWT tokens expire in 24 hours;
+OAuth2 for GitHub/Google login; sandboxed code execution with no
+host-system access; HTTPS enforced
+
+99.9% uptime SLA; health-check endpoints per service; collaboration
+sessions degrade gracefully if one participant disconnects
+
+Each execution runs in an ephemeral Docker container; no network
+access, no persistent storage, max 10s CPU time, max 256MB RAM,
+process kill on timeout
+
+Operational Transformation or CRDT guarantees convergent edit
+consistency under concurrent writes from multiple participants
+
+All cursor movements and edit deltas are broadcast within 100ms to
+all session participants via WebSocket STOMP channels
+
+Each snapshot stores a SHA-256 content hash; integrity is verified on
+restore to detect any corruption
+
+Collaboration sessions idle for 30 minutes are automatically
+terminated; execution sandbox containers are destroyed within 5
+seconds of job completion
+
+All project member changes, session events, and admin actions are
+logged with actor, timestamp, and entity reference
+
+Monaco Editor (VS Code engine) in browser for syntax highlighting,
+auto-complete, and bracket matching; responsive layout for desktop
+and large tablet
+
+Services independently deployable; REST API contracts versioned
+under /api/v1/; Docker image per service with Kubemetes HPA for
+autoscaling
+
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+7. Proposed Technology Stack
+
+Layer Technology
+
+Backend Framework
+
+Authentication
+
+Database
+
+Real-time Collaboration
+
+Code Editor (Frontend)
+
+Code Execution
+
+Execution Queue
+
+Version Diff
+
+Frontend
+
+File Storage
+
+Email
+
+Containerisation
+
+API Documentation
+Cl/CD
+
+Java Spring Boot (Spring MVC, Spring Security, Spring Data JPA,
+Spring WebSocket)
+
+JWT (JSON Web Tokens), Spring Security OAuth2, GitHub OAuth
+App, Google OAuth2
+
+PostgreSQL (primary relational store per service); Redis (WebSocket
+session state, pub/sub, execution job queue)
+
+WebSocket (STOMP) via Spring WebSocket + SockJS; Redis
+Pub/Sub for multi-instance broadcast
+
+Monaco Editor (VS Code engine) embedded in browser via
+@monaco-editor/react
+
+Docker Engine API for ephemeral container lifecycle; JudgeO or
+custom sandbox worker pool
+
+RabbitMQ for async execution job dispatch; priority queue for fair-use
+throttling
+
+Myers diff algorithm (java-diff-utils library) for line-by-line snapshot
+comparison
+
+React.js (SPA) with Tailwind CSS; or Thymeleaf + HTMX for
+server-side rendering
+
+PostgreSQL TEXT column for code content (files < 1MB); AWS S3 for
+large attachment storage
+
+Spring JavaMailSender via AWS SES or SendGrid SMTP for session
+invite and mention emails
+
+Docker with Docker Compose; Kubernetes for production autoscaling
+with Horizontal Pod Autoscaler
+
+Swagger / OpenAPI 3.0 for all REST endpoints across all services
+
+GitHub Actions for automated test, build, and deployment pipeline with
+Docker image push to ECR
+
+Confidential | CodeSync Platform | Internal Use Only
+wor
+BridgeLabz
+
+Online Code Collaboration Platform (Live Editor) | Case Study Document
+
+8. Glossary
+
+Term
+
+Project
+
+CodeFile
+File Tree
+
+CollabSession
+
+Participant
+
+Cursor Presence
+
+ExecutionJob
+
+Sandbox
+
+Snapshot
+
+Branch
+
+Diff
+
+SHA-256 Hash
+Operational
+Transformation
+
+CRDT
+
+OT
+Fork
+
+Star
+
+Inline Comment
+
+Monaco Editor
+
+Definition
+
+A top-level container grouping related code files, version history, and
+collaboration sessions
+
+A single source code file or folder node within a project's directory tree
+The hierarchical directory structure of a project showing all folders and files
+
+A live co-editing session bound to a specific file where multiple participants
+edit simultaneously
+
+A.user who has joined an active collaboration session with an assigned
+cursor colour
+
+The real-time display of each participant's cursor position in the shared
+editor
+
+A sandboxed code run submitted to a Docker container, tracking source,
+output, and performance metrics
+
+An isolated Docker container environment that safely executes
+user-submitted code with strict resource limits
+
+A saved point-in-time capture of a file's content, analogous to a Git commit
+
+A named pointer to a chain of snapshots enabling parallel development
+within a project
+
+A line-by-line comparison of two file versions highlighting added, removed,
+and modified lines
+
+A cryptographic fingerprint of a snapshot's content used to verify data
+integrity
+
+An algorithm that ensures convergent consistency when multiple users edit
+the same document concurrently
+
+Conflict-free Replicated Data Type — an alternative concurrency algorithm
+that guarantees eventual consistency without conflict resolution
+
+Operational Transformation — see definition above
+
+Creating a personal copy of another user's public project for independent
+development
+
+A bookmark mechanism allowing users to save and track projects they find
+interesting
+
+A code review annotation attached to a specific line number within a code
+file
+
+The open-source code editor powering VS Code, embedded in the browser
+for rich editing experience
+
