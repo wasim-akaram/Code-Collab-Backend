@@ -1,0 +1,66 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Microservices
+        run: |
+          SERVICES=("eureka-server" "api-gateway" "auth-service" "project-service" "payment-service" "file-service" "admin-server" "collab-service" "comment-service" "execution-service" "notification-service" "version-service")
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Building $SERVICE..."
+            docker build --build-arg SERVICE_NAME=$SERVICE -t ${{ secrets.DOCKERHUB_USERNAME }}/codesync-$SERVICE:latest -f Dockerfile .
+            echo "Pushing $SERVICE..."
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/codesync-$SERVICE:latest
+          done
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            # Ensure the directory exists
+            mkdir -p ~/CODE-COLLAB/backend
+            cd ~/CODE-COLLAB/backend
+            
+            # Create a simple .env file on the server if it doesn't exist
+            if [ ! -f .env ]; then
+              echo "DB_URL=jdbc:postgresql://postgres:5432/codesync" > .env
+              echo "DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync" >> .env
+              echo "DB_USERNAME=postgres" >> .env
+              echo "DB_PASSWORD=postgres" >> .env
+              echo "REDIS_HOST=redis" >> .env
+              echo "REDIS_PORT=6379" >> .env
+              echo "JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=" >> .env
+              echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+            fi
+            
+            # Pull the production docker-compose file from GitHub
+            curl -o docker-compose.yml https://raw.githubusercontent.com/wasim-akaram/Code-Collab-Backend/main/docker-compose.prod.yml
+            
+            # Pull latest images and restart containers
+            docker-compose pull
+            docker-compose up -d
