@@ -1,0 +1,252 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Core Infrastructure
+  # ==========================================
+  postgres:
+    image: postgres:15
+    container_name: codesync-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=codesync
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - codesync-net
+
+  redis:
+    image: redis:7
+    container_name: codesync-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - codesync-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: codesync-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - codesync-net
+
+  eureka-server:
+    image: ${DOCKERHUB_USERNAME}/codesync-eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - codesync-net
+
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/codesync-api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - eureka-server
+    networks:
+      - codesync-net
+
+  # ==========================================
+  # Microservices
+  # ==========================================
+  auth-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-auth-service:latest
+    container_name: auth-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  project-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-project-service:latest
+    container_name: project-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  payment-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-payment-service:latest
+    container_name: payment-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  file-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-file-service:latest
+    container_name: file-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+    networks:
+      - codesync-net
+
+  admin-server:
+    image: ${DOCKERHUB_USERNAME}/codesync-admin-server:latest
+    container_name: admin-server
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  collab-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-collab-service:latest
+    container_name: collab-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  comment-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-comment-service:latest
+    container_name: comment-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  execution-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-execution-service:latest
+    container_name: execution-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  notification-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-notification-service:latest
+    container_name: notification-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  version-service:
+    image: ${DOCKERHUB_USERNAME}/codesync-version-service:latest
+    container_name: version-service
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/codesync
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - codesync-net
+
+  # ==========================================
+  # Frontend
+  # ==========================================
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/codesync-frontend:latest
+    container_name: codesync-frontend
+    ports:
+      - "80:80"
+    networks:
+      - codesync-net
+
+networks:
+  codesync-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

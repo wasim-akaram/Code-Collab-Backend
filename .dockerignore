@@ -1,0 +1,14 @@
+.git
+.github
+.metadata
+.scannerwork
+**/.settings
+**/.project
+**/.classpath
+**/.factorypath
+**/target/
+**/*.log
+**/*.log.*.gz
+.env
+.idea
+.vscode
