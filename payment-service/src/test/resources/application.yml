@@ -1,0 +1,28 @@
+# Test configuration — overrides main application.yml for unit tests
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+  cloud:
+    discovery:
+      enabled: false
+
+jwt:
+  secret: test-jwt-secret-key-for-unit-testing-only-must-be-long
+
+razorpay:
+  key-id: rzp_test_000000000000000
+  key-secret: test_secret_key_for_unit_tests_only
+
+auth-service:
+  url: http://localhost:9090
+
+eureka:
+  client:
+    enabled: false
