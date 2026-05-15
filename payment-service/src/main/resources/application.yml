@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: payment-service
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8089
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+springdoc:
+  api-docs:
+    path: /payments/v3/api-docs
+  swagger-ui:
+    path: /payments/swagger-ui.html
+
+logging:
+  level:
+    org.springframework: INFO
+    com.codesync.payment: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET}
+
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
+  key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
+
+# Internal service URL for updating user plan
+auth-service:
+  url: http://localhost:8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

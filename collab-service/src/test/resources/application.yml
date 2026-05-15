@@ -1,0 +1,32 @@
+# Test configuration
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+  cloud:
+    discovery:
+      enabled: false
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+
+jwt:
+  secret: test-jwt-secret-key-for-unit-testing-only-must-be-long
+
+eureka:
+  client:
+    enabled: false
+
+piston:
+  api:
+    url: http://localhost:2000
