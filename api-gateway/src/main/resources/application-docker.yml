@@ -1,0 +1,96 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://127.0.0.1:4200"
+              - "http://3.25.222.25"
+              - "http://localhost"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Methods Access-Control-Allow-Headers, RETAIN_FIRST
+
+      routes:
+        - id: auth-service
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+
+        - id: auth-oauth2
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/oauth2/**
+          filters:
+            - RemoveRequestHeader=X-Forwarded-Host
+            - RemoveRequestHeader=X-Forwarded-Port
+            - RemoveRequestHeader=X-Forwarded-Proto
+            - RemoveRequestHeader=X-Forwarded-For
+            - RemoveRequestHeader=X-Forwarded-Prefix
+
+        - id: auth-oauth2-callback
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/login/oauth2/**
+          filters:
+            - RemoveRequestHeader=X-Forwarded-Host
+            - RemoveRequestHeader=X-Forwarded-Port
+            - RemoveRequestHeader=X-Forwarded-Proto
+            - RemoveRequestHeader=X-Forwarded-For
+            - RemoveRequestHeader=X-Forwarded-Prefix
+
+        - id: project-service
+          uri: http://project-service:8082
+          predicates:
+            - Path=/projects/**
+
+        - id: file-service
+          uri: http://file-service:8083
+          predicates:
+            - Path=/files/**
+
+        - id: collab-service
+          uri: http://collab-service:8084
+          predicates:
+            - Path=/sessions/**
+
+        - id: comment-service
+          uri: http://comment-service:8087
+          predicates:
+            - Path=/comments/**
+
+        - id: execution-service
+          uri: http://execution-service:8086
+          predicates:
+            - Path=/executions/**
+
+        - id: notification-service
+          uri: http://notification-service:8088
+          predicates:
+            - Path=/notifications/**
+
+        - id: version-service
+          uri: http://version-service:8085
+          predicates:
+            - Path=/versions/**
+
+        - id: payment-service
+          uri: http://payment-service:8089
+          predicates:
+            - Path=/payments/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
