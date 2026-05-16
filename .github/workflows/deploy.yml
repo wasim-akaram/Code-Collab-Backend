@@ -52,8 +52,9 @@ jobs:
             grep -q '^DB_URL_AUTH=' .env || echo "DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync" >> .env
             grep -q '^DB_USERNAME=' .env || echo "DB_USERNAME=postgres" >> .env
             grep -q '^DB_PASSWORD=' .env || echo "DB_PASSWORD=postgres" >> .env
-            grep -q '^REDIS_HOST=' .env || echo "REDIS_HOST=redis" >> .env
-            grep -q '^REDIS_PORT=' .env || echo "REDIS_PORT=6379" >> .env
+            grep -q '^SPRING_DATA_REDIS_HOST=' .env || echo "SPRING_DATA_REDIS_HOST=redis" >> .env
+            grep -q '^SPRING_DATA_REDIS_PORT=' .env || echo "SPRING_DATA_REDIS_PORT=6379" >> .env
+            grep -q '^SPRING_RABBITMQ_HOST=' .env || echo "SPRING_RABBITMQ_HOST=rabbitmq" >> .env
             grep -q '^JWT_SECRET=' .env || echo "JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=" >> .env
             grep -q '^DOCKERHUB_USERNAME=' .env || echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
             
