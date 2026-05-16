@@ -7,7 +7,7 @@ spring:
             allowedOrigins:
               - "http://localhost:4200"
               - "http://127.0.0.1:4200"
-              - "http://3.25.222.25"
+              - "http://3.27.201.50"
               - "http://localhost"
             allowedMethods:
               - GET

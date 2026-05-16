@@ -46,17 +46,27 @@ jobs:
             mkdir -p ~/CODE-COLLAB/backend
             cd ~/CODE-COLLAB/backend
             
-            # Ensure essential variables exist in .env even if file already exists
-            touch .env
-            grep -q '^DB_URL=' .env || echo "DB_URL=jdbc:postgresql://postgres:5432/codesync" >> .env
-            grep -q '^DB_URL_AUTH=' .env || echo "DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync" >> .env
-            grep -q '^DB_USERNAME=' .env || echo "DB_USERNAME=postgres" >> .env
-            grep -q '^DB_PASSWORD=' .env || echo "DB_PASSWORD=postgres" >> .env
-            grep -q '^SPRING_DATA_REDIS_HOST=' .env || echo "SPRING_DATA_REDIS_HOST=redis" >> .env
-            grep -q '^SPRING_DATA_REDIS_PORT=' .env || echo "SPRING_DATA_REDIS_PORT=6379" >> .env
-            grep -q '^SPRING_RABBITMQ_HOST=' .env || echo "SPRING_RABBITMQ_HOST=rabbitmq" >> .env
-            grep -q '^JWT_SECRET=' .env || echo "JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=" >> .env
-            grep -q '^DOCKERHUB_USERNAME=' .env || echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+            # Recreate .env file completely from GitHub Secrets (The Right Way)
+            cat << 'EOF' > .env
+            DB_URL=jdbc:postgresql://postgres:5432/codesync
+            DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync
+            DB_USERNAME=postgres
+            DB_PASSWORD=postgres
+            SPRING_DATA_REDIS_HOST=redis
+            SPRING_DATA_REDIS_PORT=6379
+            REDIS_HOST=redis
+            REDIS_PORT=6379
+            SPRING_RABBITMQ_HOST=rabbitmq
+            JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID }}
+            GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET }}
+            OAUTH2_REDIRECT_BASE_URI=http://3.27.201.50:8080
+            EOF
             
             # Pull the production docker-compose file from GitHub
             curl -o docker-compose.yml https://raw.githubusercontent.com/wasim-akaram/Code-Collab-Backend/main/docker-compose.prod.yml
