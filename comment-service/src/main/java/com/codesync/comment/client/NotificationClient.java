@@ -24,8 +24,8 @@ public class NotificationClient {
     // Dedicated RestTemplate with timeouts (not the @LoadBalanced bean)
     private final RestTemplate restTemplate;
 
-    // Direct URL — notification-service runs on port 8088
-    private static final String NOTIFICATION_URL = "http://localhost:8088/notifications/send";
+    @org.springframework.beans.factory.annotation.Value("${NOTIFICATION_SERVICE_URL:http://localhost:8088}/notifications/send")
+    private String notificationUrl;
 
     public NotificationClient() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -59,7 +59,7 @@ public class NotificationClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<NotificationRequest> entity = new HttpEntity<>(req, headers);
 
-            restTemplate.postForObject(NOTIFICATION_URL, entity, Object.class);
+            restTemplate.postForObject(notificationUrl, entity, Object.class);
             log.info("[NOTIFY] Mention notification sent to {} for comment #{}", mentionedEmail, commentId);
         } catch (Exception e) {
             // Non-blocking — log and move on so comment creation still succeeds

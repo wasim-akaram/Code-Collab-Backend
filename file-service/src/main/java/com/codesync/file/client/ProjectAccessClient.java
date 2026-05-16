@@ -15,9 +15,8 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class ProjectAccessClient {
 
-    // Direct URL — avoids Eureka discovery entirely to eliminate
-    // "No instances available for project-service" failures.
-    private static final String CAN_EDIT_URL = "http://localhost:8082/projects/{projectId}/can-edit";
+    @org.springframework.beans.factory.annotation.Value("${PROJECT_SERVICE_URL:http://localhost:8082}/projects/{projectId}/can-edit")
+    private String canEditUrl;
 
     // A plain (non-load-balanced) RestTemplate so the URL is treated
     // as a literal address, not an Eureka service name.
@@ -42,7 +41,7 @@ public class ProjectAccessClient {
 
         try {
             ResponseEntity<Boolean> response = directRestTemplate.exchange(
-                    CAN_EDIT_URL,
+                    canEditUrl,
                     HttpMethod.GET,
                     new HttpEntity<>(headers),
                     Boolean.class,

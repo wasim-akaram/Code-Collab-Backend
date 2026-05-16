@@ -21,8 +21,8 @@ public class NotificationClient {
 
     private final RestTemplate restTemplate;
 
-    // Direct URL — notification-service runs on port 8088
-    private static final String NOTIFICATION_URL = "http://localhost:8088/notifications/send";
+    @org.springframework.beans.factory.annotation.Value("${NOTIFICATION_SERVICE_URL:http://localhost:8088}/notifications/send")
+    private String notificationUrl;
 
     public NotificationClient() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -52,7 +52,7 @@ public class NotificationClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<NotificationRequest> entity = new HttpEntity<>(req, headers);
 
-            Object response = restTemplate.postForObject(NOTIFICATION_URL, entity, Object.class);
+            Object response = restTemplate.postForObject(notificationUrl, entity, Object.class);
             log.info("[NOTIFY] Pro activation notification sent to {}, response={}", userEmail, response);
         } catch (Exception e) {
             log.error("[NOTIFY] Failed to send Pro activation notification to {}: {}", userEmail, e.getMessage(), e);
@@ -80,7 +80,7 @@ public class NotificationClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<NotificationRequest> entity = new HttpEntity<>(req, headers);
 
-            restTemplate.postForObject(NOTIFICATION_URL, entity, Object.class);
+            restTemplate.postForObject(notificationUrl, entity, Object.class);
             log.info("[NOTIFY] Payment notification sent to {}", userEmail);
         } catch (Exception e) {
             log.error("[NOTIFY] Failed to send payment notification to {}: {}", userEmail, e.getMessage(), e);

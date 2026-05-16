@@ -25,8 +25,8 @@ public class NotificationClient {
     // Dedicated RestTemplate with timeouts (not the @LoadBalanced bean)
     private final RestTemplate restTemplate;
 
-    // Direct URL — notification-service runs on port 8088
-    private static final String NOTIFICATION_URL = "http://localhost:8088/notifications/send";
+    @org.springframework.beans.factory.annotation.Value("${NOTIFICATION_SERVICE_URL:http://localhost:8088}/notifications/send")
+    private String notificationUrl;
 
     public NotificationClient() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -58,7 +58,7 @@ public class NotificationClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<NotificationRequest> entity = new HttpEntity<>(req, headers);
 
-            restTemplate.postForObject(NOTIFICATION_URL, entity, Object.class);
+            restTemplate.postForObject(notificationUrl, entity, Object.class);
             log.info("[NOTIFY] Session-join notification sent to {}", joinedEmail);
         } catch (Exception e) {
             log.error("[NOTIFY] Failed to send session-join notification to {}: {}", joinedEmail, e.getMessage(), e);
@@ -88,7 +88,7 @@ public class NotificationClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<NotificationRequest> entity = new HttpEntity<>(req, headers);
 
-            restTemplate.postForObject(NOTIFICATION_URL, entity, Object.class);
+            restTemplate.postForObject(notificationUrl, entity, Object.class);
             log.info("[NOTIFY] Session-kick notification sent to {}", kickedEmail);
         } catch (Exception e) {
             log.error("[NOTIFY] Failed to send session-kick notification to {}: {}", kickedEmail, e.getMessage(), e);
