@@ -30,6 +30,7 @@ class NotificationClientTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(notificationClient, "restTemplate", restTemplate);
+        ReflectionTestUtils.setField(notificationClient, "notificationUrl", "http://localhost:8088/notifications/send");
     }
 
     @Test

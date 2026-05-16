@@ -14,6 +14,11 @@ class NotificationClientTest {
 
     private final NotificationClient client = new NotificationClient();
 
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(client, "notificationUrl", "http://localhost:8088/notifications/send");
+    }
+
     @Test
     @DisplayName("sendProActivatedNotification should not throw even when notification service is unavailable")
     void sendProActivated_serviceDown_shouldNotThrow() {
