@@ -33,8 +33,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
-    /** Base URL of the Angular frontend — used for the post-OAuth redirect. */
-    private static final String FRONTEND_URL = "http://localhost:4200";
+    @org.springframework.beans.factory.annotation.Value("${FRONTEND_URL:http://localhost:4200}")
+    private String frontendUrl = "http://localhost:4200";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -120,6 +120,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         log.info("OAuth login success for {} via {}", user.getEmail(), provider);
         // The frontend callback route reads this token and stores it like a normal
         // email/password login token.
-        response.sendRedirect(FRONTEND_URL + "/oauth-callback?token=" + token);
+        response.sendRedirect(frontendUrl + "/oauth-callback?token=" + token);
     }
 }
