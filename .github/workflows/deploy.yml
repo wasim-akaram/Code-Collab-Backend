@@ -46,21 +46,21 @@ jobs:
             mkdir -p ~/CODE-COLLAB/backend
             cd ~/CODE-COLLAB/backend
             
-            # Create a simple .env file on the server if it doesn't exist
-            if [ ! -f .env ]; then
-              echo "DB_URL=jdbc:postgresql://postgres:5432/codesync" > .env
-              echo "DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync" >> .env
-              echo "DB_USERNAME=postgres" >> .env
-              echo "DB_PASSWORD=postgres" >> .env
-              echo "REDIS_HOST=redis" >> .env
-              echo "REDIS_PORT=6379" >> .env
-              echo "JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=" >> .env
-              echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-            fi
+            # Ensure essential variables exist in .env even if file already exists
+            touch .env
+            grep -q '^DB_URL=' .env || echo "DB_URL=jdbc:postgresql://postgres:5432/codesync" >> .env
+            grep -q '^DB_URL_AUTH=' .env || echo "DB_URL_AUTH=jdbc:postgresql://postgres:5432/codesync" >> .env
+            grep -q '^DB_USERNAME=' .env || echo "DB_USERNAME=postgres" >> .env
+            grep -q '^DB_PASSWORD=' .env || echo "DB_PASSWORD=postgres" >> .env
+            grep -q '^REDIS_HOST=' .env || echo "REDIS_HOST=redis" >> .env
+            grep -q '^REDIS_PORT=' .env || echo "REDIS_PORT=6379" >> .env
+            grep -q '^JWT_SECRET=' .env || echo "JWT_SECRET=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3Jfand0X3Rva2VuX2dlbmVyYXRpb24=" >> .env
+            grep -q '^DOCKERHUB_USERNAME=' .env || echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
             
             # Pull the production docker-compose file from GitHub
             curl -o docker-compose.yml https://raw.githubusercontent.com/wasim-akaram/Code-Collab-Backend/main/docker-compose.prod.yml
             
             # Pull latest images and restart containers
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             docker compose pull
             docker compose up -d

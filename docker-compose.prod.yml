@@ -94,6 +94,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8088
     depends_on:
       - postgres
       - eureka-server
@@ -111,6 +112,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8088
     depends_on:
       - postgres
       - eureka-server
@@ -128,6 +130,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - PROJECT_SERVICE_URL=http://project-service:8082
     depends_on:
       - postgres
     networks:
@@ -161,6 +164,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8088
     depends_on:
       - postgres
       - eureka-server
@@ -178,6 +182,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8088
     depends_on:
       - postgres
       - eureka-server
