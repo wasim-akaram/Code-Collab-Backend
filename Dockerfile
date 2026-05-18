@@ -15,11 +15,19 @@ ARG SERVICE_NAME
 RUN --mount=type=cache,target=/root/.m2 mvn -s settings.xml -f ${SERVICE_NAME}/pom.xml clean package -DskipTests
 
 # Stage 2: Create a lightweight runtime image
-FROM eclipse-temurin:17-jre
+# We use the JDK instead of JRE so that javac is available for execution-service
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
 # Define the service name again for this stage
 ARG SERVICE_NAME
+
+# Install sandbox execution dependencies ONLY if this is the execution-service
+RUN if [ "$SERVICE_NAME" = "execution-service" ]; then \
+      apt-get update && \
+      apt-get install -y python3 nodejs npm gcc g++ golang-go && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Copy the compiled jar from the builder stage
 COPY --from=builder /app/${SERVICE_NAME}/target/*.jar app.jar
