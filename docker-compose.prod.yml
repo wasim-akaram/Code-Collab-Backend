@@ -113,6 +113,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
       - NOTIFICATION_SERVICE_URL=http://notification-service:8088
+      - AUTH_SERVICE_URL=http://auth-service:8081
     depends_on:
       - postgres
       - eureka-server
