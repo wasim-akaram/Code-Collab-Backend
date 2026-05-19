@@ -63,8 +63,10 @@ jobs:
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID }}
-            GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET }}
+            GITHUB_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}
+            GITHUB_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}
+            RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
+            RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
             OAUTH2_REDIRECT_BASE_URI=http://3.27.201.50:8080
             EOF
             
