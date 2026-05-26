@@ -1,4 +1,4 @@
-name: Backend CI/CD Pipeline
+ename: Backend CI/CD Pipeline
 
 on:
   push:
@@ -67,7 +67,8 @@ jobs:
             GITHUB_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}
             RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
             RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
-            OAUTH2_REDIRECT_BASE_URI=http://3.27.201.50:8080
+            FRONTEND_URL=http://13.237.228.156
+            OAUTH2_REDIRECT_BASE_URI=http://13.237.228.156:8080
             EOF
             
             # Pull the production docker-compose file from GitHub
