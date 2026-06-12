@@ -1,5 +1,6 @@
 /*
- * Code reader note: Starts the Spring Cloud Gateway service, the single HTTP entry point that routes frontend requests to backend services.
+ * Code reader note: Starts the Spring Cloud Gateway service,
+ the single HTTP entry point that routes frontend requests to backend services.
  */
 package com.codesync.gateway;
 
